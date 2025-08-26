@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+
+# Block common private paths that might exist
+Disallow: /admin/
+Disallow: /login/
+Disallow: /account/
+Disallow: /user/
+Disallow: /config/
+Disallow: /includes/
+Disallow: /tmp/
+Disallow: /cgi-bin/
+Disallow: /*.php$
+Disallow: /*.inc$
+
+# Block search query parameters to avoid duplicate content
+Disallow: /*?*
+Disallow: /*&
+
+# Allow bots to see the main QR code generation tool
+Allow: /qr-code-generator/
+Allow: /create/
+
+# Specify the location of the sitemap
+Sitemap: https://www.qrcodegenerator.shop/sitemap.xml
