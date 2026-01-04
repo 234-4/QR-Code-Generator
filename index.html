@@ -139,6 +139,81 @@
                 grid-template-columns: 1fr !important;
             }
         }
+        /* FAQ Section Styling */
+.faq-section {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 0 20px;
+  font-family: 'Arial', sans-serif;
+}
+
+.faq-section h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #111;
+}
+
+.faq-item {
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.faq-question {
+  width: 100%;
+  text-align: left;
+  padding: 15px 20px;
+  font-size: 1.1rem;
+  background-color: #f7f7f7;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.faq-question::after {
+  content: '+';
+  position: absolute;
+  right: 20px;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.faq-question.active::after {
+  content: '-';
+  transform: rotate(180deg);
+}
+
+.faq-question:hover {
+  background-color: #ececec;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background-color: #fff;
+  padding: 0 20px;
+}
+
+.faq-answer p {
+  margin: 15px 0;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .faq-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .faq-question {
+    font-size: 1rem;
+  }
+}
+
     </style>
 </head>
 <body class="gradient-bg min-h-screen text-white">
@@ -329,6 +404,31 @@
             </div>
         </div>
     </div>
+        <section class="faq-section">
+  <h2>Frequently Asked Questions</h2>
+
+  <div class="faq-item">
+    <button class="faq-question">How do I create a QR code?</button>
+    <div class="faq-answer">
+      <p>Enter your URL, text, WiFi details, or contact information, customize the design, and download your QR code instantly.</p>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-question">Is this QR code generator free?</button>
+    <div class="faq-answer">
+      <p>Yes, our QR code generator is completely free and does not require signup.</p>
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-question">Can I customize my QR code?</button>
+    <div class="faq-answer">
+      <p>Yes, you can change colors, add a logo, and adjust error correction before downloading your QR code.</p>
+    </div>
+  </div>
+</section>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -597,38 +697,20 @@
             renderHistory();
         });
     </script>
-        <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "How do I create a QR code?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Enter your URL, text, WiFi details, or contact information, customize the design, and download your QR code instantly."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is this QR code generator free?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes, our QR code generator is completely free and does not require signup."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Can I customize my QR code?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Yes, you can change colors, add a logo, and adjust error correction before downloading your QR code."
-      }
+       <script>
+document.querySelectorAll('.faq-question').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('active');
+    const answer = item.nextElementSibling;
+    if (answer.style.maxHeight) {
+      answer.style.maxHeight = null;
+    } else {
+      answer.style.maxHeight = answer.scrollHeight + "px";
     }
-  ]
-}
+  });
+});
 </script>
+
 
 </body>
 </html>
