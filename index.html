@@ -293,6 +293,55 @@
     font-size: 15px;
   }
 }
+/* QR Intro Section */
+.qr-intro {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+  background: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+  color: #222;
+}
+
+/* Paragraph */
+.qr-intro p {
+  font-size: 16px;
+  margin-bottom: 18px;
+}
+
+/* Heading */
+.qr-intro h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: #000;
+}
+
+/* List */
+.qr-intro ul {
+  padding-left: 20px;
+}
+
+.qr-intro li {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  .qr-intro {
+    padding: 15px;
+  }
+
+  .qr-intro p,
+  .qr-intro li {
+    font-size: 15px;
+  }
+
+  .qr-intro h2 {
+    font-size: 20px;
+  }
+}
 
     </style>
 </head>
@@ -322,19 +371,22 @@
             <h1 class="text-3xl sm:text-4xl font-bold text-center mb-2">Free Online QR Code Generator</h1>
 
             <p class="text-center text-lg sm:text-xl mb-6 sm:mb-8 opacity-90">Create colorful QR codes for various purposes</p>
-                   
-<p>
-Create QR codes instantly for websites, text, WiFi, email, phone numbers, and more.
-Our free QR Code Generator helps you generate high-quality QR codes without signup.
-</p>
+<section class="qr-intro">
+  <p>
+    Create QR codes instantly for websites, text, WiFi, email, phone numbers, and more.
+    Our free QR Code Generator helps you generate high-quality QR codes without signup.
+  </p>
 
-<h2>Why Use Our QR Code Generator?</h2>
-<ul>
-  <li>100% Free & No Registration</li>
-  <li>Instant QR Code Creation</li>
-  <li>Supports URL, Text, WiFi, Email & Phone</li>
-  <li>Mobile-Friendly & Secure</li>
-</ul>
+  <h2>Why Use Our QR Code Generator?</h2>
+
+  <ul>
+    <li>100% Free & No Registration</li>
+    <li>Instant QR Code Creation</li>
+    <li>Supports URL, Text, WiFi, Email & Phone</li>
+    <li>Mobile-Friendly & Secure</li>
+  </ul>
+</section>
+
             
             <div class="qr-container rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
                 <!-- Dark/Light Mode Toggle -->
