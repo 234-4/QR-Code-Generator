@@ -1,266 +1,455 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free QR Code Generator</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7f7fd5">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>
+
+
+
+<title>Free QR Code Generator – No Signup</title>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Free QR Code Generator",
+  "url": "https://www.qrcodegenerator.shop/",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "All",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "description": "Generate free static QR codes online without signup. Supports URL, WhatsApp, WiFi, Email, and Text QR codes."
+}
+</script>
+<script type="application/ld+json">
+{
+"@context":"https://schema.org",
+"@type":"FAQPage",
+"mainEntity":[
+{
+"@type":"Question",
+"name":"Is this QR code generator free forever?",
+"acceptedAnswer":{
+"@type":"Answer",
+"text":"Yes. All QR codes generated are static and free for lifetime."
+}
+},
+{
+"@type":"Question",
+"name":"Do QR codes expire?",
+"acceptedAnswer":{
+"@type":"Answer",
+"text":"No. Static QR codes never expire and work permanently."
+}
+},
+{
+"@type":"Question",
+"name":"Is signup required?",
+"acceptedAnswer":{
+"@type":"Answer",
+"text":"No signup, no login, and no personal data required."
+}
+}
+]
+}
+</script>
+
+
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #7f7fd5; 
-        background: linear-gradient(to right, #91eae4, #7f7fd5);
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-    }
+:root{
+  --bg:#7f7fd5;
+  --card:rgba(255,255,255,.15);
+  --white:#fff;
+}
 
-    .container {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 20px;
-        border-radius: 15px;
-        width: 100%;
-        max-width: 450px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        backdrop-filter: blur(10px);
-    }
+*{box-sizing:border-box}
 
-    h1 {
-        text-align: center;
-        color: #fff;
-        margin-bottom: 20px;
-        font-size: 1.6em;
-    }
+body{
+  margin:0;
+  font-family:system-ui,Arial;
+  background:linear-gradient(135deg,#91eae4,var(--bg));
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+}
 
-    label {
-        display: block;
-        margin-top: 10px;
-        color: #fff;
-        font-weight: bold;
-    }
+.app{
+  width:100%;
+  max-width:480px;
+  background:var(--card);
+  backdrop-filter:blur(12px);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 15px 40px rgba(0,0,0,.2);
+}
 
-    input[type="text"], input[type="url"], select, input[type="color"], input[type="file"], input[type="number"] {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        border-radius: 8px;
-        border: none;
-        outline: none;
-        box-sizing: border-box;
-    }
+h1{
+  color:#fff;
+  text-align:center;
+  margin:0 0 12px;
+  font-size:1.4rem;
+}
 
-    input[type="file"] {
-        padding: 3px;
-    }
+label{
+  color:#fff;
+  font-weight:600;
+  font-size:.9rem;
+  margin-top:10px;
+  display:block;
+}
 
-    .tab {
-        display: flex;
-        margin-top: 10px;
-        justify-content: space-between;
-    }
+input,select,button{
+  width:100%;
+  border:none;
+  border-radius:10px;
+  padding:9px;
+  margin-top:6px;
+  font-size:.95rem;
+}
 
-    .tab button {
-        flex: 1;
-        padding: 8px;
-        border: none;
-        cursor: pointer;
-        background: rgba(255,255,255,0.2);
-        color: #fff;
-        font-weight: bold;
-        border-radius: 8px;
-        margin-right: 5px;
-        transition: 0.3s;
-    }
+input[type="color"]{padding:3px;height:42px}
 
-    .tab button.active {
-        background: #fff;
-        color: #7f7fd5;
-    }
+.tabs{
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+}
 
-    .tab button:last-child {
-        margin-right: 0;
-    }
+.tabs button{
+  flex:1;
+  background:rgba(255,255,255,.25);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
 
-    button.generate {
-        width: 100%;
-        padding: 10px;
-        margin-top: 20px;
-        background: #fff;
-        color: #7f7fd5;
-        font-weight: bold;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+.tabs button.active{
+  background:#fff;
+  color:#6b6bd6;
+}
 
-    button.generate:hover {
-        background: #f0f0f0;
-    }
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
 
-    #preview {
-        display: block;
-        margin: 20px auto;
-        max-width: 100%;
-        border: 5px solid #fff;
-        border-radius: 10px;
-    }
+.actions button{
+  background:#fff;
+  color:#6b6bd6;
+  font-weight:700;
+  cursor:pointer;
+}
 
-    .download-btn {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        background: #fff;
-        color: #7f7fd5;
-        font-weight: bold;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: 0.3s;
-        text-align: center;
-        text-decoration: none;
-        display: block;
-    }
+canvas{
+  display:block;
+  margin:16px auto 8px;
+  background:#fff;
+  border-radius:12px;
+}
 
-    .download-btn:hover {
-        background: #f0f0f0;
-    }
+.footer{
+  text-align:center;
+  font-size:.8rem;
+  color:#fff;
+  opacity:.85;
+  margin-top:8px;
+}
+    filename,content
+google,https://google.com
+wifi-office,OfficeWiFi;password123
+whatsapp,Hello from QR tool
 
-    @media (max-width: 500px) {
-        .tab button {
-            font-size: 0.85em;
-            padding: 6px;
-        }
 
-        h1 {
-            font-size: 1.3em;
-        }
-    }
+@media(max-width:420px){
+  h1{font-size:1.2rem}
+}
 </style>
 </head>
+
 <body>
+    <select id="lang" style="margin-bottom:10px">
+  <option value="en">English</option>
+  <option value="fr">Français</option>
+  <option value="pt">Português</option>
+  <option value="ur">اردو</option>
+</select>
 
-<div class="container">
-    <h1>Free QR Code Generator</h1>
+<div class="app">
+<h1>Free QR Code Generator</h1>
 
-    <label for="logo">Upload Logo (optional)</label>
-    <input type="file" id="logo" accept="image/*">
+<label>Upload Logo (optional)</label>
+<input type="file" id="logo" accept="image/*">
 
-    <div class="tab">
-        <button class="active" data-type="url">URL</button>
-        <button data-type="whatsapp">WhatsApp</button>
-        <button data-type="text">Text</button>
-        <button data-type="email">Email</button>
-        <button data-type="wifi">WiFi</button>
-    </div>
-
-    <label for="data">Input</label>
-    <input type="text" id="data" placeholder="Enter URL or text here">
-
-    <label for="qrColor">QR Code Color</label>
-    <input type="color" id="qrColor" value="#000000">
-
-    <label for="bgColor">Background Color</label>
-    <input type="color" id="bgColor" value="#ffffff">
-
-    <label for="error">Error Correction</label>
-    <select id="error">
-        <option value="L">Low (7%)</option>
-        <option value="M" selected>Medium (15%)</option>
-        <option value="Q">Quartile (25%)</option>
-        <option value="H">High (30%)</option>
-    </select>
-
-    <label for="size">Size (px)</label>
-    <input type="number" id="size" value="200" min="100" max="1000">
-
-    <button class="generate">Generate QR Code</button>
-
-    <canvas id="preview"></canvas>
-
-    <a id="downloadPNG" class="download-btn" download="qr-code.png">Download PNG</a>
+<div class="tabs">
+  <button class="active" data-type="url">URL</button>
+  <button data-type="whatsapp">WhatsApp</button>
+  <button data-type="text">Text</button>
+  <button data-type="email">Email</button>
+  <button data-type="wifi">WiFi</button>
 </div>
+
+<label>Input</label>
+<input id="data" placeholder="https://example.com">
+
+<div class="actions">
+  <div>
+    <label>QR Color</label>
+    <input type="color" id="qrColor" value="#000000">
+  </div>
+  <div>
+    <label>Background</label>
+    <input type="color" id="bgColor" value="#ffffff">
+  </div>
+</div>
+
+<label>Error Correction</label>
+<select id="level">
+  <option value="L">Low (7%)</option>
+  <option value="M" selected>Medium (15%)</option>
+  <option value="Q">Quartile (25%)</option>
+  <option value="H">High (30%)</option>
+</select>
+
+<label>Size (px)</label>
+<input type="range" id="size" min="150" max="600" value="250">
+
+<canvas id="qr"></canvas>
+
+<div class="actions">
+  <button id="png">Download PNG</button>
+  <button id="svg">Download SVG</button>
+</div>
+
+<button id="copy">Copy QR Image</button>
+    <hr style="margin:30px 0;opacity:.3">
+
+<h2 style="color:#fff">Bulk QR Code Generator</h2>
+
+<label style="color:#fff">Upload CSV file</label>
+<input type="file" id="csv" accept=".csv">
+
+<button id="bulkBtn" style="margin-top:10px">
+Generate Bulk QR Codes
+</button>
+
+
+<div class="footer">
+✔ Lifetime Free · No Signup · No Tracking
+</div>
+</div>
+    <p style="text-align:center;color:#fff;font-size:0.8rem;opacity:0.9;">
+🔒 No tracking · No cookies · Works offline after load
+</p>
+
+    <section style="margin-top:30px;color:#fff;line-height:1.6;font-size:0.95rem;">
+  <h2>Free QR Code Generator – No Signup Required</h2>
+  <p>
+    This free QR code generator lets you create high-quality QR codes instantly,
+    without registration, subscriptions, or hidden limits.
+    Your QR codes are static, permanent, and work forever.
+  </p>
+
+  <h3>Why use our QR Code Generator?</h3>
+  <ul>
+    <li>✔ 100% free for lifetime</li>
+    <li>✔ No signup or login required</li>
+    <li>✔ Static QR codes (never expire)</li>
+    <li>✔ Supports URL, WhatsApp, WiFi, Email & Text</li>
+    <li>✔ Custom colors, size & logo support</li>
+    <li>✔ Works fully in your browser (privacy-friendly)</li>
+  </ul>
+
+  <h3>How it works</h3>
+  <p>
+    Enter your content, customize the design, and download your QR code instantly.
+    Everything runs locally in your browser — no data is stored or tracked.
+  </p>
+</section>
+    <section style="margin-top:25px;color:#fff;">
+  <h2>Frequently Asked Questions</h2>
+
+  <h4>Are these QR codes really free forever?</h4>
+  <p>Yes. All QR codes generated here are static and never expire.</p>
+
+  <h4>Do I need to create an account?</h4>
+  <p>No signup, no login, no email required.</p>
+
+  <h4>Are my QR codes tracked?</h4>
+  <p>No. This tool does not track scans or collect personal data.</p>
+
+  <h4>Can I use these QR codes for business?</h4>
+  <p>Yes. You can use them for commercial and personal purposes.</p>
+</section>
+
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 <script>
-    const tabs = document.querySelectorAll('.tab button');
-    const dataInput = document.getElementById('data');
-    let qrType = 'url';
+const qr = new QRious({element:qrCanvas,size:250});
 
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            qrType = tab.dataset.type;
-            dataInput.placeholder = qrType === 'url' ? "Enter URL here" :
-                                    qrType === 'whatsapp' ? "Enter WhatsApp message" :
-                                    qrType === 'text' ? "Enter text here" :
-                                    qrType === 'email' ? "Enter Email address" :
-                                    qrType === 'wifi' ? "Enter WiFi info SSID;PASSWORD" : "";
-        });
-    });
+const inputs = document.querySelectorAll('input,select');
+const tabs = document.querySelectorAll('.tabs button');
+let type='url';
 
-    const qr = new QRious({
-        element: document.getElementById('preview'),
-        size: 200,
-        value: ''
-    });
+tabs.forEach(b=>{
+  b.onclick=()=>{
+    tabs.forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    type=b.dataset.type;
+    update();
+  }
+});
 
-    document.querySelector('.generate').addEventListener('click', () => {
-        let value = dataInput.value.trim();
-        const qrColor = document.getElementById('qrColor').value;
-        const bgColor = document.getElementById('bgColor').value;
-        const error = document.getElementById('error').value;
-        const size = parseInt(document.getElementById('size').value);
+inputs.forEach(i=>i.addEventListener('input',update));
 
-        if (!value) {
-            alert("Please enter some data!");
-            return;
-        }
+function format(value){
+  if(type==='whatsapp') return 'https://wa.me/?text='+encodeURIComponent(value);
+  if(type==='email') return 'mailto:'+value;
+  if(type==='wifi'){
+    const [s,p]=value.split(';');
+    return s&&p?`WIFI:T:WPA;S:${s};P:${p};;`:'';
+  }
+  return value;
+}
 
-        // QR Code content formatting for special types
-        if(qrType === 'whatsapp'){
-            value = `https://wa.me/?text=${encodeURIComponent(value)}`;
-        } else if(qrType === 'email'){
-            value = `mailto:${value}`;
-        } else if(qrType === 'wifi'){
-            const parts = value.split(';'); // SSID;PASSWORD
-            if(parts.length >= 2){
-                value = `WIFI:T:WPA;S:${parts[0]};P:${parts[1]};;`;
-            } else {
-                alert("WiFi input must be: SSID;PASSWORD");
-                return;
-            }
-        }
+function update(){
+  const val=format(data.value.trim());
+  qr.value=val||' ';
+  qr.size=size.value;
+  qr.foreground=qrColor.value;
+  qr.background=bgColor.value;
+  qr.level=level.value;
 
-        qr.value = value;
-        qr.size = size;
-        qr.background = bgColor;
-        qr.foreground = qrColor;
-        qr.level = error;
+  if(logo.files[0]){
+    const r=new FileReader();
+    r.onload=e=>{
+      const ctx=qrCanvas.getContext('2d');
+      const img=new Image();
+      img.onload=()=>{
+        const s=qr.size*0.22;
+        ctx.drawImage(img,(qr.size-s)/2,(qr.size-s)/2,s,s);
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(logo.files[0]);
+  }
+}
 
-        // Add logo if uploaded
-        const logoInput = document.getElementById('logo');
-        if(logoInput.files.length > 0){
-            const reader = new FileReader();
-            reader.onload = function(e){
-                const ctx = qr.element.getContext('2d');
-                const img = new Image();
-                img.onload = function(){
-                    const logoSize = size * 0.2;
-                    ctx.drawImage(img, (size - logoSize)/2, (size - logoSize)/2, logoSize, logoSize);
-                }
-                img.src = e.target.result;
-            }
-            reader.readAsDataURL(logoInput.files[0]);
-        }
+png.onclick=()=>{
+  const a=document.createElement('a');
+  a.href=qrCanvas.toDataURL();
+  a.download='qr-code.png';
+  a.click();
+};
 
-        // Update download link
-        const downloadLink = document.getElementById('downloadPNG');
-        downloadLink.href = qr.element.toDataURL("image/png");
-    });
+svg.onclick=()=>{
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${qr.size}" height="${qr.size}">
+  <image href="${qrCanvas.toDataURL()}" width="100%" height="100%"/>
+  </svg>`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+  a.download='qr-code.svg';
+  a.click();
+};
+
+copy.onclick=async()=>{
+  qrCanvas.toBlob(b=>navigator.clipboard.write([new ClipboardItem({'image/png':b})]));
+  alert('QR copied to clipboard!');
+};
+
+update();
 </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<script>
+document.getElementById('bulkBtn').onclick = async () => {
+  const file = csv.files[0];
+  if(!file) return alert('Upload CSV first');
+
+  const text = await file.text();
+  const rows = text.trim().split('\n').slice(1);
+  const zip = new JSZip();
+
+  for(const row of rows){
+    const [name, value] = row.split(',');
+    if(!value) continue;
+
+    qr.value = value.trim();
+    const data = qrCanvas.toDataURL().split(',')[1];
+    zip.file(`${name}.png`, data, {base64:true});
+  }
+
+  zip.generateAsync({type:'blob'}).then(b=>{
+    saveAs(b,'qr-codes.zip');
+  });
+};
+</script>
+<script>const cacheName = 'qr-generator-v1';
+const assets = ['/','/index.html'];
+
+self.addEventListener('install', e=>{
+  e.waitUntil(
+    caches.open(cacheName).then(c=>c.addAll(assets))
+  );
+});
+
+self.addEventListener('fetch', e=>{
+  e.respondWith(
+    caches.match(e.request).then(r=>r || fetch(e.request))
+  );
+});
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/service-worker.js');
+}
+</script>
+    <script>
+const t={
+en:{title:"Free QR Code Generator",input:"Enter your content"},
+fr:{title:"Générateur de QR Code Gratuit",input:"Entrez votre contenu"},
+pt:{title:"Gerador de QR Code Gratuito",input:"Digite seu conteúdo"},
+ur:{title:"مفت QR کوڈ جنریٹر",input:"مواد درج کریں"}
+};
+
+lang.onchange=()=>{
+  const l=t[lang.value];
+  document.querySelector('h1').innerText=l.title;
+  data.placeholder=l.input;
+};
+</script>
+
+<footer style="
+margin-top:40px;
+padding:20px;
+text-align:center;
+font-size:.85rem;
+color:#fff;
+opacity:.9">
+
+<p>
+<a href="/" style="color:#fff">Home</a> ·
+<a href="/privacy-policy.html" style="color:#fff">Privacy Policy</a> ·
+<a href="/terms.html" style="color:#fff">Terms</a>
+</p>
+
+<p>
+© 2026 qrcodegenerator.shop – Free QR Code Generator
+</p>
+
+</footer>
+
 </body>
 </html>
