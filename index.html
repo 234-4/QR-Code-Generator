@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>
+
 <meta name="theme-color" content="#7f7fd5">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>  
 
 
 
@@ -165,11 +166,7 @@ canvas{
   opacity:.85;
   margin-top:8px;
 }
-    filename,content
-google,https://google.com
-wifi-office,OfficeWiFi;password123
-whatsapp,Hello from QR tool
-
+   
 
 @media(max-width:420px){
   h1{font-size:1.2rem}
@@ -184,6 +181,13 @@ whatsapp,Hello from QR tool
   <option value="pt">Português</option>
   <option value="ur">اردو</option>
 </select>
+    <pre style="color:#fff;font-size:.85rem;opacity:.9">
+filename,content
+google,https://google.com
+wifi-office,OfficeWiFi;password123
+whatsapp,Hello from QR tool
+</pre>
+
 
 <div class="app">
 <h1>Free QR Code Generator</h1>
@@ -224,7 +228,9 @@ whatsapp,Hello from QR tool
 <label>Size (px)</label>
 <input type="range" id="size" min="150" max="600" value="250">
 
-<canvas id="qr"></canvas>
+const qrCanvas = document.getElementById('qr');
+const qr = new QRious({ element: qrCanvas, size: 250 });
+
 
 <div class="actions">
   <button id="png">Download PNG</button>
