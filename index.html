@@ -8,49 +8,67 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
 <style>
+:root{
+  --bg:#0f1025;
+  --card:#15163a;
+  --text:#ffffff;
+  --btn:#5f66ff;
+}
+
+body.light{
+  --bg:#f2f4ff;
+  --card:#ffffff;
+  --text:#111;
+  --btn:#5f66ff;
+}
+
 body{
   margin:0;
   font-family:system-ui,Arial;
-  background:linear-gradient(135deg,#0f1025,#1b1d3a);
+  background:var(--bg);
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:15px;
-  color:#fff;
+  color:var(--text);
 }
 
 .app{
   width:100%;
   max-width:380px;
-  background:#12132b;
+  background:var(--card);
   border-radius:18px;
   padding:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  box-shadow:0 20px 50px rgba(0,0,0,.4);
 }
 
-select,input,button,textarea{
+.top{
+  display:flex;
+  gap:10px;
+}
+
+select, input, button, textarea{
   width:100%;
-  border:none;
-  border-radius:10px;
   padding:12px;
-  margin-top:10px;
+  border-radius:10px;
+  border:none;
   font-size:1rem;
 }
 
-input,textarea{
+input{
   background:#fff;
 }
 
 button{
-  background:#5f66ff;
+  background:var(--btn);
   color:#fff;
   font-weight:700;
   cursor:pointer;
 }
 
-button:hover{
-  opacity:.9;
+button.toggle{
+  width:48px;
+  padding:0;
 }
 
 canvas{
@@ -60,18 +78,18 @@ canvas{
   border-radius:12px;
 }
 
-.small{
-  font-size:.85rem;
-  opacity:.8;
-  text-align:center;
-  margin-top:15px;
-}
-
 textarea{
-  background:#1d1f3a;
-  color:#fff;
+  background:rgba(0,0,0,.2);
+  color:var(--text);
   height:90px;
   font-size:.85rem;
+}
+
+.small{
+  text-align:center;
+  font-size:.85rem;
+  opacity:.8;
+  margin-top:12px;
 }
 </style>
 </head>
@@ -80,11 +98,19 @@ textarea{
 
 <div class="app">
 
-<select id="lang">
-  <option>English</option>
-</select>
+<div class="top">
+  <select id="lang">
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+    <option value="pt">Português</option>
+    <option value="ur">اردو</option>
+  </select>
+  <button class="toggle" id="theme">🌙</button>
+</div>
 
-<h2 style="text-align:center;margin:10px 0">Free QR Code Generator</h2>
+<h2 id="title" style="text-align:center;margin:12px 0">
+Free QR Code Generator
+</h2>
 
 <input id="text" placeholder="Enter your content">
 
@@ -110,26 +136,62 @@ whatsapp,Hello from QR tool
 </div>
 
 <script>
+/* ---------- QR ---------- */
 const qr = new QRious({
   element: document.getElementById('qrCanvas'),
   size: 240,
   value: ' '
 });
 
-document.getElementById('generate').onclick = () => {
-  const val = document.getElementById('text').value.trim();
-  if(!val){
-    alert('Please enter content');
-    return;
-  }
-  qr.value = val;
+generate.onclick = () => {
+  const v = text.value.trim();
+  if(!v) return alert('Enter content');
+  qr.value = v;
 };
 
-document.getElementById('download').onclick = () => {
-  const link = document.createElement('a');
-  link.href = qr.canvas.toDataURL('image/png');
-  link.download = 'qr-code.png';
-  link.click();
+download.onclick = () => {
+  const a = document.createElement('a');
+  a.href = qr.canvas.toDataURL();
+  a.download = 'qr-code.png';
+  a.click();
+};
+
+/* ---------- THEME ---------- */
+theme.onclick = () => {
+  document.body.classList.toggle('light');
+  theme.textContent =
+    document.body.classList.contains('light') ? '🌞' : '🌙';
+};
+
+/* ---------- LANGUAGE ---------- */
+const t = {
+  en:{
+    title:'Free QR Code Generator',
+    placeholder:'Enter your content',
+    btn:'Generate QR'
+  },
+  fr:{
+    title:'Générateur de QR Code Gratuit',
+    placeholder:'Entrez votre contenu',
+    btn:'Générer QR'
+  },
+  pt:{
+    title:'Gerador de QR Code Gratuito',
+    placeholder:'Digite seu conteúdo',
+    btn:'Gerar QR'
+  },
+  ur:{
+    title:'مفت QR کوڈ جنریٹر',
+    placeholder:'مواد درج کریں',
+    btn:'کیو آر بنائیں'
+  }
+};
+
+lang.onchange = () => {
+  const l = t[lang.value];
+  title.innerText = l.title;
+  text.placeholder = l.placeholder;
+  generate.innerText = l.btn;
 };
 </script>
 
