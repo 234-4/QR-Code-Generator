@@ -253,6 +253,9 @@
         #qrCode {
             margin-bottom: 25px;
             max-width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .qr-controls {
@@ -291,6 +294,8 @@
             height: 40px;
             padding: 5px;
             cursor: pointer;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
         }
 
         .advanced-section {
@@ -404,6 +409,10 @@
 
         .notification.show {
             transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #ef4444;
         }
 
         @media (max-width: 480px) {
@@ -531,10 +540,11 @@
             <div class="preview-section">
                 <h2 class="section-title"><i class="fas fa-eye"></i> Preview</h2>
                 <div class="qr-preview-container">
-                    <div id="qrCode"></div>
-                    <div id="qrPlaceholder">
-                        <i class="fas fa-qrcode" style="font-size: 100px; color: var(--border-color); margin-bottom: 20px;"></i>
-                        <p style="color: var(--border-color); text-align: center;">Your QR code will appear here<br>after generation</p>
+                    <div id="qrCode">
+                        <div id="qrPlaceholder">
+                            <i class="fas fa-qrcode" style="font-size: 100px; color: var(--border-color); margin-bottom: 20px;"></i>
+                            <p style="color: var(--border-color); text-align: center;">Your QR code will appear here<br>after generation</p>
+                        </div>
                     </div>
                 </div>
 
@@ -657,7 +667,8 @@
             logoImage: null,
             qrCode: null,
             deferredPrompt: null,
-            csvData: null
+            csvData: null,
+            currentQRData: null
         };
 
         // Language dictionary
@@ -785,7 +796,7 @@
             setupPWA();
 
             // Generate initial QR code
-            setTimeout(() => generateQRCode(), 500);
+            generateQRCode();
         }
 
         // Set up all event listeners
@@ -807,19 +818,17 @@
             // Size slider
             elements.sizeSlider.addEventListener('input', function() {
                 elements.sizeValue.textContent = this.value + 'px';
-                if (AppState.qrCode) {
-                    updateQRCodeSize();
-                }
+                updateQRCodeDisplay();
             });
 
             // Color pickers
             elements.fgColor.addEventListener('change', function() {
                 localStorage.setItem('qrFgColor', this.value);
-                if (AppState.qrCode) generateQRCode();
+                generateQRCode();
             });
             elements.bgColor.addEventListener('change', function() {
                 localStorage.setItem('qrBgColor', this.value);
-                if (AppState.qrCode) generateQRCode();
+                generateQRCode();
             });
 
             // Logo upload
@@ -855,8 +864,12 @@
                 elements.csvDropZone.style.borderColor = 'var(--border-color)';
                 const file = e.dataTransfer.files[0];
                 if (file && file.name.endsWith('.csv')) {
-                    elements.csvFile.files = e.dataTransfer.files;
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    elements.csvFile.files = dataTransfer.files;
                     handleCSVUpload();
+                } else {
+                    showNotification('Please upload a CSV file', 'error');
                 }
             });
         }
@@ -950,22 +963,28 @@
             
             switch(activeTab) {
                 case 'url':
-                    return document.getElementById('urlInput').value;
+                    const url = document.getElementById('urlInput').value;
+                    return url.startsWith('http') ? url : 'https://' + url;
                 case 'whatsapp':
                     const number = document.getElementById('whatsappNumber').value;
                     const message = document.getElementById('whatsappMessage').value;
-                    return `https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                    const cleanNumber = number.replace(/\D/g, '');
+                    if (!cleanNumber) return '';
+                    const encodedMessage = encodeURIComponent(message);
+                    return `https://wa.me/${cleanNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
                 case 'text':
-                    return document.getElementById('textInput').value;
+                    return document.getElementById('textInput').value || '';
                 case 'email':
                     const to = document.getElementById('emailTo').value;
                     const subject = document.getElementById('emailSubject').value;
                     const body = document.getElementById('emailBody').value;
+                    if (!to) return '';
                     return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 case 'wifi':
                     const ssid = document.getElementById('wifiSsid').value;
                     const password = document.getElementById('wifiPassword').value;
                     const encryption = document.getElementById('wifiEncryption').value;
+                    if (!ssid) return '';
                     return `WIFI:S:${ssid};T:${encryption};P:${password};;`;
                 default:
                     return 'https://github.com';
@@ -980,93 +999,92 @@
                 return;
             }
 
+            AppState.currentQRData = data;
             const size = parseInt(elements.sizeSlider.value);
             const fgColor = elements.fgColor.value;
             const bgColor = elements.bgColor.value;
 
-            // Clear previous QR code
-            elements.qrCode.innerHTML = '';
-            elements.qrPlaceholder.classList.add('hidden');
-
-            // Generate new QR code
             try {
-                QRCode.toString(data, {
-                    type: 'svg',
-                    width: size,
-                    color: {
-                        dark: fgColor,
-                        light: bgColor
-                    },
-                    margin: 2,
-                    errorCorrectionLevel: 'H'
-                }, function(err, svg) {
-                    if (err) {
-                        console.error(err);
-                        showNotification('Error generating QR code', 'error');
-                        return;
-                    }
-
-                    // Add logo if exists
-                    if (AppState.logoImage) {
-                        const parser = new DOMParser();
-                        const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
-                        const svgElement = svgDoc.documentElement;
-
-                        // Create logo group
-                        const logoSize = size * 0.2; // 20% of QR size
-                        const center = size / 2;
-                        
-                        const logoGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g');
-                        
-                        // Add white background circle
-                        const bgCircle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        bgCircle.setAttribute('cx', center);
-                        bgCircle.setAttribute('cy', center);
-                        bgCircle.setAttribute('r', logoSize * 0.7);
-                        bgCircle.setAttribute('fill', bgColor);
-                        logoGroup.appendChild(bgCircle);
-
-                        // Add logo image
-                        const image = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image');
-                        image.setAttribute('href', AppState.logoImage);
-                        image.setAttribute('x', center - logoSize/2);
-                        image.setAttribute('y', center - logoSize/2);
-                        image.setAttribute('width', logoSize);
-                        image.setAttribute('height', logoSize);
-                        image.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-                        logoGroup.appendChild(image);
-
-                        svgElement.appendChild(logoGroup);
-                        svg = new XMLSerializer().serializeToString(svgDoc);
-                    }
-
-                    elements.qrCode.innerHTML = svg;
-                    AppState.qrCode = svg;
-                    
-                    // Store SVG element for later use
-                    const svgElement = elements.qrCode.querySelector('svg');
-                    if (svgElement) {
-                        svgElement.style.width = '100%';
-                        svgElement.style.height = 'auto';
-                        svgElement.style.maxWidth = '500px';
-                    }
-
-                    showNotification(translations[AppState.currentLang].generated, 'success');
-                });
+                // Generate QR code with logo if available
+                generateQRWithLogo(data, size, fgColor, bgColor);
             } catch (error) {
                 console.error('QR Generation error:', error);
                 showNotification('Error generating QR code', 'error');
             }
         }
 
+        // Generate QR with optional logo
+        async function generateQRWithLogo(data, size, fgColor, bgColor) {
+            // Generate base QR code
+            const qrDataURL = await new Promise((resolve, reject) => {
+                QRCode.toDataURL(data, {
+                    width: size,
+                    height: size,
+                    color: {
+                        dark: fgColor,
+                        light: bgColor
+                    },
+                    margin: 2,
+                    errorCorrectionLevel: 'H'
+                }, (err, url) => {
+                    if (err) reject(err);
+                    else resolve(url);
+                });
+            });
+
+            // Create canvas for QR code
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+
+            // Load QR code image
+            const qrImage = new Image();
+            qrImage.onload = () => {
+                // Draw QR code
+                ctx.drawImage(qrImage, 0, 0, size, size);
+
+                // Add logo if exists
+                if (AppState.logoImage) {
+                    const logoImage = new Image();
+                    logoImage.onload = () => {
+                        const logoSize = size * 0.2; // 20% of QR size
+                        const centerX = size / 2 - logoSize / 2;
+                        const centerY = size / 2 - logoSize / 2;
+                        
+                        // Draw white background circle for logo
+                        ctx.beginPath();
+                        ctx.arc(size / 2, size / 2, logoSize / 2 + 5, 0, Math.PI * 2);
+                        ctx.fillStyle = bgColor;
+                        ctx.fill();
+                        
+                        // Draw logo
+                        ctx.drawImage(logoImage, centerX, centerY, logoSize, logoSize);
+                        
+                        // Update display
+                        updateQRDisplay(canvas.toDataURL());
+                    };
+                    logoImage.src = AppState.logoImage;
+                } else {
+                    // Update display without logo
+                    updateQRDisplay(qrDataURL);
+                }
+            };
+            qrImage.src = qrDataURL;
+        }
+
+        // Update QR display
+        function updateQRDisplay(dataURL) {
+            elements.qrPlaceholder.classList.add('hidden');
+            elements.qrCode.innerHTML = `<img src="${dataURL}" alt="QR Code" style="max-width: 100%; height: auto;">`;
+            AppState.qrCode = dataURL;
+            showNotification(translations[AppState.currentLang].generated, 'success');
+        }
+
         // Update QR code size
-        function updateQRCodeSize() {
-            const svgElement = elements.qrCode.querySelector('svg');
-            if (svgElement) {
-                svgElement.setAttribute('width', elements.sizeSlider.value);
-                svgElement.setAttribute('height', elements.sizeSlider.value);
-                svgElement.style.width = '100%';
-                svgElement.style.height = 'auto';
+        function updateQRCodeDisplay() {
+            if (AppState.currentQRData) {
+                generateQRCode();
             }
         }
 
@@ -1080,12 +1098,20 @@
                 return;
             }
 
+            if (file.size > 1024 * 1024) { // 1MB limit
+                showNotification('Logo size should be less than 1MB', 'error');
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 AppState.logoImage = e.target.result;
                 elements.logoFileName.textContent = file.name;
                 elements.removeLogoBtn.classList.remove('hidden');
                 generateQRCode();
+            };
+            reader.onerror = function() {
+                showNotification('Error reading logo file', 'error');
             };
             reader.readAsDataURL(file);
         }
@@ -1099,38 +1125,79 @@
         }
 
         // Download QR code
-        function downloadQRCode(format) {
+        async function downloadQRCode(format) {
             if (!AppState.qrCode) {
                 showNotification('Please generate a QR code first', 'error');
                 return;
             }
 
-            const data = getFormData();
             const fileName = `qr-code-${Date.now()}.${format}`;
 
             if (format === 'svg') {
-                const blob = new Blob([AppState.qrCode], { type: 'image/svg+xml' });
+                // Generate SVG version
+                const size = parseInt(elements.sizeSlider.value);
+                const fgColor = elements.fgColor.value;
+                const bgColor = elements.bgColor.value;
+                const data = AppState.currentQRData;
+
+                const svgString = await new Promise((resolve, reject) => {
+                    QRCode.toString(data, {
+                        type: 'svg',
+                        width: size,
+                        color: {
+                            dark: fgColor,
+                            light: bgColor
+                        },
+                        margin: 2,
+                        errorCorrectionLevel: 'H'
+                    }, (err, svg) => {
+                        if (err) reject(err);
+                        else resolve(svg);
+                    });
+                });
+
+                // Add logo to SVG if exists
+                let finalSvg = svgString;
+                if (AppState.logoImage) {
+                    const parser = new DOMParser();
+                    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+                    const svgElement = svgDoc.documentElement;
+
+                    // Create logo group
+                    const logoSize = size * 0.2;
+                    const center = size / 2;
+                    
+                    const logoGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    
+                    // Add background circle
+                    const bgCircle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    bgCircle.setAttribute('cx', center);
+                    bgCircle.setAttribute('cy', center);
+                    bgCircle.setAttribute('r', logoSize * 0.7);
+                    bgCircle.setAttribute('fill', bgColor);
+                    logoGroup.appendChild(bgCircle);
+
+                    // Add logo image
+                    const image = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image');
+                    image.setAttribute('href', AppState.logoImage);
+                    image.setAttribute('x', center - logoSize/2);
+                    image.setAttribute('y', center - logoSize/2);
+                    image.setAttribute('width', logoSize);
+                    image.setAttribute('height', logoSize);
+                    image.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    logoGroup.appendChild(image);
+
+                    svgElement.appendChild(logoGroup);
+                    finalSvg = new XMLSerializer().serializeToString(svgDoc);
+                }
+
+                const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
                 saveAs(blob, fileName);
             } else if (format === 'png') {
-                const canvas = document.createElement('canvas');
-                const size = parseInt(elements.sizeSlider.value);
-                canvas.width = size;
-                canvas.height = size;
-                
-                const ctx = canvas.getContext('2d');
-                const img = new Image();
-                
-                img.onload = function() {
-                    ctx.fillStyle = elements.bgColor.value;
-                    ctx.fillRect(0, 0, size, size);
-                    ctx.drawImage(img, 0, 0, size, size);
-                    
-                    canvas.toBlob(function(blob) {
-                        saveAs(blob, fileName);
-                    });
-                };
-                
-                img.src = 'data:image/svg+xml;base64,' + btoa(AppState.qrCode);
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = AppState.qrCode;
+                link.click();
             }
             
             showNotification(`QR Code downloaded as ${format.toUpperCase()}`, 'success');
@@ -1144,13 +1211,27 @@
             }
 
             try {
-                const blob = new Blob([AppState.qrCode], { type: 'image/svg+xml' });
-                const item = new ClipboardItem({ 'image/svg+xml': blob });
-                await navigator.clipboard.write([item]);
+                // Convert data URL to blob
+                const response = await fetch(AppState.qrCode);
+                const blob = await response.blob();
+                
+                // Copy to clipboard
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                
                 showNotification(translations[AppState.currentLang].copied, 'success');
             } catch (err) {
                 console.error('Copy failed:', err);
-                showNotification('Failed to copy QR code', 'error');
+                // Fallback: copy image URL
+                try {
+                    await navigator.clipboard.writeText(AppState.qrCode);
+                    showNotification('QR Code URL copied to clipboard', 'success');
+                } catch (err2) {
+                    showNotification('Failed to copy QR code', 'error');
+                }
             }
         }
 
@@ -1161,8 +1242,15 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const csvContent = e.target.result;
-                parseCSV(csvContent);
+                try {
+                    const csvContent = e.target.result;
+                    parseCSV(csvContent);
+                } catch (error) {
+                    showNotification('Error reading CSV file', 'error');
+                }
+            };
+            reader.onerror = function() {
+                showNotification('Error reading CSV file', 'error');
             };
             reader.readAsText(file);
         }
@@ -1172,21 +1260,44 @@
             const lines = csvContent.split('\n').filter(line => line.trim() !== '');
             AppState.csvData = [];
             
+            let hasData = false;
             lines.forEach((line, index) => {
-                const parts = line.split(',').map(part => part.trim());
-                if (parts.length >= 2) {
+                // Handle quoted content with commas
+                const parts = [];
+                let currentPart = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        parts.push(currentPart.trim());
+                        currentPart = '';
+                    } else {
+                        currentPart += char;
+                    }
+                }
+                parts.push(currentPart.trim());
+                
+                // Remove quotes from parts
+                const cleanParts = parts.map(part => part.replace(/^"(.*)"$/, '$1'));
+                
+                if (cleanParts.length >= 2 && cleanParts[0]) {
                     AppState.csvData.push({
-                        content: parts[0],
-                        filename: parts[1] || `qr-code-${index + 1}`
+                        content: cleanParts[0],
+                        filename: cleanParts[1] || `qr-code-${index + 1}`
                     });
+                    hasData = true;
                 }
             });
             
-            if (AppState.csvData.length > 0) {
+            if (hasData && AppState.csvData.length > 0) {
                 elements.generateBulkBtn.disabled = false;
                 showNotification(`Loaded ${AppState.csvData.length} QR codes to generate`, 'success');
             } else {
-                showNotification('Invalid CSV format', 'error');
+                showNotification('Invalid CSV format or empty file', 'error');
+                elements.generateBulkBtn.disabled = true;
             }
         }
 
@@ -1208,50 +1319,74 @@
             const total = AppState.csvData.length;
             let processed = 0;
 
-            for (const item of AppState.csvData) {
-                try {
-                    const qrData = await new Promise((resolve, reject) => {
-                        QRCode.toString(item.content, {
-                            type: 'svg',
-                            width: size,
-                            color: {
-                                dark: fgColor,
-                                light: bgColor
-                            },
-                            margin: 2,
-                            errorCorrectionLevel: 'H'
-                        }, function(err, svg) {
-                            if (err) reject(err);
-                            else resolve(svg);
+            // Process in batches to prevent UI freeze
+            const batchSize = 5;
+            
+            async function processBatch(startIndex) {
+                const endIndex = Math.min(startIndex + batchSize, total);
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const item = AppState.csvData[i];
+                    try {
+                        const qrData = await new Promise((resolve, reject) => {
+                            QRCode.toDataURL(item.content, {
+                                width: size,
+                                height: size,
+                                color: {
+                                    dark: fgColor,
+                                    light: bgColor
+                                },
+                                margin: 2,
+                                errorCorrectionLevel: 'H'
+                            }, (err, url) => {
+                                if (err) reject(err);
+                                else resolve(url);
+                            });
                         });
-                    });
 
-                    zip.file(`${item.filename}.svg`, qrData);
+                        // Convert data URL to blob
+                        const response = await fetch(qrData);
+                        const blob = await response.blob();
+                        zip.file(`${item.filename}.png`, blob);
+                        
+                    } catch (error) {
+                        console.error('Error generating QR for:', item.content, error);
+                        // Continue with other items
+                    }
                     
                     processed++;
                     const progress = (processed / total) * 100;
                     elements.bulkProgressBar.style.width = `${progress}%`;
                     elements.bulkProgressText.textContent = `${processed}/${total}`;
-                    
-                    // Small delay to prevent UI freeze
-                    await new Promise(resolve => setTimeout(resolve, 10));
-                } catch (error) {
-                    console.error('Error generating QR for:', item.content, error);
+                }
+                
+                // Continue with next batch if any
+                if (processed < total) {
+                    // Allow UI to update
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                    await processBatch(endIndex);
                 }
             }
 
-            // Generate ZIP file
-            const zipBlob = await zip.generateAsync({ type: 'blob' });
-            saveAs(zipBlob, `qr-codes-bulk-${Date.now()}.zip`);
-            
-            // Reset
-            elements.bulkProgress.classList.add('hidden');
-            elements.generateBulkBtn.disabled = false;
-            elements.bulkProgressBar.style.width = '0%';
-            elements.csvFile.value = '';
-            AppState.csvData = null;
-            
-            showNotification(`Generated ${total} QR codes in ZIP file`, 'success');
+            try {
+                await processBatch(0);
+                
+                // Generate ZIP file
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                saveAs(zipBlob, `qr-codes-bulk-${Date.now()}.zip`);
+                
+                showNotification(`Generated ${total} QR codes in ZIP file`, 'success');
+            } catch (error) {
+                console.error('Bulk generation error:', error);
+                showNotification('Error generating bulk QR codes', 'error');
+            } finally {
+                // Reset
+                elements.bulkProgress.classList.add('hidden');
+                elements.generateBulkBtn.disabled = false;
+                elements.bulkProgressBar.style.width = '0%';
+                elements.csvFile.value = '';
+                AppState.csvData = null;
+            }
         }
 
         // PWA Setup
@@ -1272,6 +1407,7 @@
                 
                 if (outcome === 'accepted') {
                     elements.installBtn.classList.add('hidden');
+                    showNotification('App installed successfully!', 'success');
                 }
                 
                 AppState.deferredPrompt = null;
@@ -1280,7 +1416,6 @@
             // Listen for app installed
             window.addEventListener('appinstalled', () => {
                 elements.installBtn.classList.add('hidden');
-                showNotification('App installed successfully!', 'success');
             });
         }
 
@@ -1293,6 +1428,7 @@
                 elements.notification.style.background = 'var(--secondary-color)';
             } else if (type === 'error') {
                 elements.notification.style.background = '#ef4444';
+                elements.notification.classList.add('error');
             } else {
                 elements.notification.style.background = 'var(--primary-color)';
             }
@@ -1308,9 +1444,28 @@
         document.addEventListener('DOMContentLoaded', initApp);
 
         // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
+                // Simple service worker
+                const swContent = `
+                self.addEventListener('install', event => {
+                    self.skipWaiting();
+                });
+                
+                self.addEventListener('fetch', event => {
+                    // Cache-first strategy
+                    event.respondWith(
+                        caches.match(event.request).then(response => {
+                            return response || fetch(event.request);
+                        })
+                    );
+                });
+                `;
+                
+                const blob = new Blob([swContent], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl).then(registration => {
                     console.log('ServiceWorker registration successful');
                 }).catch(err => {
                     console.log('ServiceWorker registration failed: ', err);
@@ -1323,18 +1478,18 @@
             "name": "QRGen Pro",
             "short_name": "QRGen",
             "description": "Privacy-friendly QR Code Generator",
-            "start_url": "/",
+            "start_url": ".",
             "display": "standalone",
             "background_color": "#3b82f6",
             "theme_color": "#3b82f6",
             "icons": [
                 {
-                    "src": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/qrcode.svg",
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzNiODJmNiIgZD0iTTEgMWgxMXYxMUgxVjF6bTEyIDBIMjN2MTFIMTNWMXpNMSAxM2gxMXYxMUgxVjEzem0xMiAwSDIzdjExSDEzVjEzeiIvPjwvc3ZnPg==",
                     "sizes": "192x192",
                     "type": "image/svg+xml"
                 },
                 {
-                    "src": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/qrcode.svg",
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzNiODJmNiIgZD0iTTEgMWgxMXYxMUgxVjF6bTEyIDBIMjN2MTFIMTNWMXpNMSAxM2gxMXYxMUgxVjEzem0xMiAwSDIzdjExSDEzVjEzeiIvPjwvc3ZnPg==",
                     "sizes": "512x512",
                     "type": "image/svg+xml"
                 }
