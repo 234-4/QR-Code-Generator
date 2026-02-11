@@ -43,7 +43,6 @@
             line-height: 1.6;
             transition: var(--transition);
             min-height: 100vh;
-            padding-bottom: 120px;
         }
 
         .container {
@@ -75,6 +74,7 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--primary-color);
+            text-decoration: none;
         }
 
         .logo i {
@@ -127,6 +127,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-top: 30px;
+            padding-bottom: 40px;
         }
 
         @media (max-width: 768px) {
@@ -304,6 +305,7 @@
             padding: 25px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
+            margin-bottom: 100px;
         }
 
         .csv-upload {
@@ -326,26 +328,24 @@
         }
 
         footer {
-            margin-top: 60px;
-            padding: 30px 0;
+            padding: 40px 0;
             border-top: 1px solid var(--border-color);
             background: var(--card-bg);
-            position: fixed;
-            bottom: 0;
             width: 100%;
         }
 
         .footer-content {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 30px;
         }
 
         .footer-links {
             display: flex;
-            gap: 25px;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .footer-links a {
@@ -361,6 +361,7 @@
         .copyright {
             color: #6b7280;
             font-size: 0.9rem;
+            max-width: 400px;
         }
 
         .pwa-badge {
@@ -414,6 +415,72 @@
             background: #ef4444;
         }
 
+        .notification.warning {
+            background: #f59e0b;
+        }
+
+        /* Policy Pages */
+        .policy-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .policy-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .policy-header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .policy-content {
+            line-height: 1.8;
+        }
+
+        .policy-content h2 {
+            color: var(--primary-color);
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .policy-content h3 {
+            margin: 20px 0 10px 0;
+            color: var(--text-color);
+        }
+
+        .policy-content p {
+            margin-bottom: 15px;
+        }
+
+        .policy-content ul, .policy-content ol {
+            margin: 15px 0 15px 20px;
+        }
+
+        .policy-content li {
+            margin-bottom: 8px;
+        }
+
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-home:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 480px) {
             .header-content {
                 flex-direction: column;
@@ -427,229 +494,391 @@
             
             .footer-content {
                 flex-direction: column;
-                text-align: center;
+                text-align: left;
+            }
+            
+            .policy-container {
+                padding: 20px;
+                margin: 20px auto;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-qrcode"></i>
-                    <span>QRGen Pro</span>
-                </div>
-                <div class="controls">
-                    <button class="lang-toggle" id="langToggle">
-                        <i class="fas fa-language"></i>
-                        <span>EN</span>
-                    </button>
-                    <button class="theme-toggle" id="themeToggle">
-                        <i class="fas fa-moon"></i>
-                        <span>Dark</span>
-                    </button>
-                    <button class="install-btn hidden" id="installBtn">
-                        <i class="fas fa-download"></i>
-                        <span>Install</span>
-                    </button>
+    <!-- Main App View -->
+    <div id="appView">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <a href="#" class="logo">
+                        <i class="fas fa-qrcode"></i>
+                        <span>QRGen Pro</span>
+                    </a>
+                    <div class="controls">
+                        <button class="lang-toggle" id="langToggle">
+                            <i class="fas fa-language"></i>
+                            <span>EN</span>
+                        </button>
+                        <button class="theme-toggle" id="themeToggle">
+                            <i class="fas fa-moon"></i>
+                            <span>Dark</span>
+                        </button>
+                        <button class="install-btn hidden" id="installBtn">
+                            <i class="fas fa-download"></i>
+                            <span>Install</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="container">
-        <div class="main-content">
-            <div class="form-section">
-                <h2 class="section-title"><i class="fas fa-edit"></i> Content</h2>
+        <main class="container">
+            <div class="main-content">
+                <div class="form-section">
+                    <h2 class="section-title"><i class="fas fa-edit"></i> Content</h2>
+                    
+                    <div class="tab-container">
+                        <div class="tab active" data-tab="url">URL</div>
+                        <div class="tab" data-tab="whatsapp">WhatsApp</div>
+                        <div class="tab" data-tab="text">Text</div>
+                        <div class="tab" data-tab="email">Email</div>
+                        <div class="tab" data-tab="wifi">Wi-Fi</div>
+                    </div>
+
+                    <div id="urlForm" class="tab-content">
+                        <div class="form-group">
+                            <label for="urlInput">Website URL</label>
+                            <input type="url" id="urlInput" placeholder="https://example.com" value="https://github.com">
+                        </div>
+                    </div>
+
+                    <div id="whatsappForm" class="tab-content hidden">
+                        <div class="form-group">
+                            <label for="whatsappNumber">Phone Number</label>
+                            <input type="tel" id="whatsappNumber" placeholder="+1234567890" value="+1234567890">
+                        </div>
+                        <div class="form-group">
+                            <label for="whatsappMessage">Message</label>
+                            <textarea id="whatsappMessage" rows="3" placeholder="Hello, I'd like to know more about..."></textarea>
+                        </div>
+                    </div>
+
+                    <div id="textForm" class="tab-content hidden">
+                        <div class="form-group">
+                            <label for="textInput">Text Content</label>
+                            <textarea id="textInput" rows="5" placeholder="Enter your text here...">QRGen Pro - Privacy-friendly QR Code Generator</textarea>
+                        </div>
+                    </div>
+
+                    <div id="emailForm" class="tab-content hidden">
+                        <div class="form-group">
+                            <label for="emailTo">Recipient Email</label>
+                            <input type="email" id="emailTo" placeholder="recipient@example.com" value="hello@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="emailSubject">Subject</label>
+                            <input type="text" id="emailSubject" placeholder="Email subject" value="QR Code Information">
+                        </div>
+                        <div class="form-group">
+                            <label for="emailBody">Message</label>
+                            <textarea id="emailBody" rows="3" placeholder="Email body content"></textarea>
+                        </div>
+                    </div>
+
+                    <div id="wifiForm" class="tab-content hidden">
+                        <div class="form-group">
+                            <label for="wifiSsid">Network Name (SSID)</label>
+                            <input type="text" id="wifiSsid" placeholder="MyWiFiNetwork" value="HomeWiFi">
+                        </div>
+                        <div class="form-group">
+                            <label for="wifiPassword">Password</label>
+                            <input type="text" id="wifiPassword" placeholder="WiFi password" value="SecurePassword123">
+                        </div>
+                        <div class="form-group">
+                            <label for="wifiEncryption">Encryption Type</label>
+                            <select id="wifiEncryption">
+                                <option value="WPA">WPA/WPA2</option>
+                                <option value="WEP">WEP</option>
+                                <option value="nopass">No Encryption</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="generateBtn" class="btn">
+                        <i class="fas fa-bolt"></i>
+                        Generate QR Code
+                    </button>
+                </div>
+
+                <div class="preview-section">
+                    <h2 class="section-title"><i class="fas fa-eye"></i> Preview</h2>
+                    <div class="qr-preview-container">
+                        <div id="qrCode">
+                            <div id="qrPlaceholder">
+                                <i class="fas fa-qrcode" style="font-size: 100px; color: var(--border-color); margin-bottom: 20px;"></i>
+                                <p style="color: var(--border-color); text-align: center;">Your QR code will appear here<br>after generation</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="qr-controls">
+                        <div class="form-group">
+                            <label>Size</label>
+                            <div class="slider-container">
+                                <input type="range" id="sizeSlider" min="100" max="500" value="250">
+                                <span id="sizeValue">250px</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Colors</label>
+                            <div class="color-picker">
+                                <div>
+                                    <label style="font-size: 0.8rem;">Foreground</label>
+                                    <input type="color" id="fgColor" class="color-input" value="#000000">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem;">Background</label>
+                                    <input type="color" id="bgColor" class="color-input" value="#ffffff">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="downloadPNG" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> PNG
+                        </button>
+                        <button id="downloadSVG" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> SVG
+                        </button>
+                        <button id="copyBtn" class="btn">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="advanced-section">
+                <h2 class="section-title"><i class="fas fa-cogs"></i> Advanced Options</h2>
                 
-                <div class="tab-container">
-                    <div class="tab active" data-tab="url">URL</div>
-                    <div class="tab" data-tab="whatsapp">WhatsApp</div>
-                    <div class="tab" data-tab="text">Text</div>
-                    <div class="tab" data-tab="email">Email</div>
-                    <div class="tab" data-tab="wifi">Wi-Fi</div>
+                <div class="form-group">
+                    <label><i class="fas fa-image"></i> Add Logo (Optional)</label>
+                    <div class="logo-upload">
+                        <input type="file" id="logoUpload" accept="image/*" style="display: none;">
+                        <button id="uploadLogoBtn" class="btn-outline btn">
+                            <i class="fas fa-upload"></i> Choose Logo
+                        </button>
+                        <span id="logoFileName" style="margin-left: 10px; color: #6b7280;">No logo selected</span>
+                        <button id="removeLogoBtn" class="btn-outline btn hidden" style="margin-left: 10px;">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                    <small>Upload a small logo to place in the center of QR code</small>
                 </div>
 
-                <div id="urlForm" class="tab-content">
-                    <div class="form-group">
-                        <label for="urlInput">Website URL</label>
-                        <input type="url" id="urlInput" placeholder="https://example.com" value="https://github.com">
+                <div class="form-group">
+                    <label><i class="fas fa-layer-group"></i> Bulk QR Generation (CSV)</label>
+                    <div class="csv-upload" id="csvDropZone">
+                        <i class="fas fa-file-csv" style="font-size: 48px; color: var(--primary-color); margin-bottom: 15px;"></i>
+                        <p>Drag & drop CSV file or click to browse</p>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Format: content,filename (one per line)<br>
+                            Example: https://example.com,example_qr
+                        </p>
+                        <input type="file" id="csvFile" accept=".csv" style="display: none;">
                     </div>
-                </div>
-
-                <div id="whatsappForm" class="tab-content hidden">
-                    <div class="form-group">
-                        <label for="whatsappNumber">Phone Number</label>
-                        <input type="tel" id="whatsappNumber" placeholder="+1234567890" value="+1234567890">
-                    </div>
-                    <div class="form-group">
-                        <label for="whatsappMessage">Message</label>
-                        <textarea id="whatsappMessage" rows="3" placeholder="Hello, I'd like to know more about..."></textarea>
-                    </div>
-                </div>
-
-                <div id="textForm" class="tab-content hidden">
-                    <div class="form-group">
-                        <label for="textInput">Text Content</label>
-                        <textarea id="textInput" rows="5" placeholder="Enter your text here...">QRGen Pro - Privacy-friendly QR Code Generator</textarea>
-                    </div>
-                </div>
-
-                <div id="emailForm" class="tab-content hidden">
-                    <div class="form-group">
-                        <label for="emailTo">Recipient Email</label>
-                        <input type="email" id="emailTo" placeholder="recipient@example.com" value="hello@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="emailSubject">Subject</label>
-                        <input type="text" id="emailSubject" placeholder="Email subject" value="QR Code Information">
-                    </div>
-                    <div class="form-group">
-                        <label for="emailBody">Message</label>
-                        <textarea id="emailBody" rows="3" placeholder="Email body content"></textarea>
-                    </div>
-                </div>
-
-                <div id="wifiForm" class="tab-content hidden">
-                    <div class="form-group">
-                        <label for="wifiSsid">Network Name (SSID)</label>
-                        <input type="text" id="wifiSsid" placeholder="MyWiFiNetwork" value="HomeWiFi">
-                    </div>
-                    <div class="form-group">
-                        <label for="wifiPassword">Password</label>
-                        <input type="text" id="wifiPassword" placeholder="WiFi password" value="SecurePassword123">
-                    </div>
-                    <div class="form-group">
-                        <label for="wifiEncryption">Encryption Type</label>
-                        <select id="wifiEncryption">
-                            <option value="WPA">WPA/WPA2</option>
-                            <option value="WEP">WEP</option>
-                            <option value="nopass">No Encryption</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button id="generateBtn" class="btn">
-                    <i class="fas fa-bolt"></i>
-                    Generate QR Code
-                </button>
-            </div>
-
-            <div class="preview-section">
-                <h2 class="section-title"><i class="fas fa-eye"></i> Preview</h2>
-                <div class="qr-preview-container">
-                    <div id="qrCode">
-                        <div id="qrPlaceholder">
-                            <i class="fas fa-qrcode" style="font-size: 100px; color: var(--border-color); margin-bottom: 20px;"></i>
-                            <p style="color: var(--border-color); text-align: center;">Your QR code will appear here<br>after generation</p>
+                    <button id="generateBulkBtn" class="btn btn-secondary" disabled>
+                        <i class="fas fa-qrcode"></i> Generate Bulk QR Codes
+                    </button>
+                    <div id="bulkProgress" class="hidden" style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Processing...</span>
+                            <span id="bulkProgressText">0/0</span>
+                        </div>
+                        <div style="height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden;">
+                            <div id="bulkProgressBar" style="height: 100%; background: var(--primary-color); width: 0%; transition: width 0.3s;"></div>
                         </div>
                     </div>
-                </div>
-
-                <div class="qr-controls">
-                    <div class="form-group">
-                        <label>Size</label>
-                        <div class="slider-container">
-                            <input type="range" id="sizeSlider" min="100" max="500" value="250">
-                            <span id="sizeValue">250px</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Colors</label>
-                        <div class="color-picker">
-                            <div>
-                                <label style="font-size: 0.8rem;">Foreground</label>
-                                <input type="color" id="fgColor" class="color-input" value="#000000">
-                            </div>
-                            <div>
-                                <label style="font-size: 0.8rem;">Background</label>
-                                <input type="color" id="bgColor" class="color-input" value="#ffffff">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button id="downloadPNG" class="btn btn-secondary">
-                        <i class="fas fa-download"></i> PNG
-                    </button>
-                    <button id="downloadSVG" class="btn btn-secondary">
-                        <i class="fas fa-download"></i> SVG
-                    </button>
-                    <button id="copyBtn" class="btn">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
                 </div>
             </div>
-        </div>
+        </main>
 
-        <div class="advanced-section">
-            <h2 class="section-title"><i class="fas fa-cogs"></i> Advanced Options</h2>
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-links">
+                        <h3 style="margin-bottom: 15px; color: var(--primary-color);">Quick Links</h3>
+                        <a href="#" onclick="showPrivacyPolicy()">Privacy Policy</a>
+                        <a href="#" onclick="showTermsOfService()">Terms of Service</a>
+                        <a href="#about">About</a>
+                        <a href="#help">Help & Support</a>
+                        <a href="#github">GitHub</a>
+                    </div>
+                    <div class="copyright">
+                        <p>© 2024 QRGen Pro. 100% client-side processing. No data leaves your browser.</p>
+                        <p style="margin-top: 5px; font-size: 0.8rem;">
+                            <span class="pwa-badge"><i class="fas fa-mobile-alt"></i> PWA Ready</span>
+                            <span style="margin-left: 10px;">No tracking • No signup • Privacy-first</span>
+                        </p>
+                        <p style="margin-top: 10px; font-size: 0.8rem;">
+                            <i class="fas fa-shield-alt"></i> All processing happens in your browser
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Privacy Policy View -->
+    <div id="privacyPolicyView" class="hidden">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <a href="#" onclick="showMainApp()" class="logo">
+                        <i class="fas fa-qrcode"></i>
+                        <span>QRGen Pro</span>
+                    </a>
+                    <div class="controls">
+                        <button class="theme-toggle" onclick="toggleTheme()">
+                            <i class="fas fa-moon"></i>
+                            <span>Dark</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="policy-container">
+            <div class="policy-header">
+                <h1>Privacy Policy</h1>
+                <p>Last Updated: December 2024</p>
+            </div>
             
-            <div class="form-group">
-                <label><i class="fas fa-image"></i> Add Logo (Optional)</label>
-                <div class="logo-upload">
-                    <input type="file" id="logoUpload" accept="image/*" style="display: none;">
-                    <button id="uploadLogoBtn" class="btn-outline btn">
-                        <i class="fas fa-upload"></i> Choose Logo
-                    </button>
-                    <span id="logoFileName" style="margin-left: 10px; color: #6b7280;">No logo selected</span>
-                    <button id="removeLogoBtn" class="btn-outline btn hidden" style="margin-left: 10px;">
-                        <i class="fas fa-times"></i> Remove
-                    </button>
-                </div>
-                <small>Upload a small logo to place in the center of QR code</small>
-            </div>
-
-            <div class="form-group">
-                <label><i class="fas fa-layer-group"></i> Bulk QR Generation (CSV)</label>
-                <div class="csv-upload" id="csvDropZone">
-                    <i class="fas fa-file-csv" style="font-size: 48px; color: var(--primary-color); margin-bottom: 15px;"></i>
-                    <p>Drag & drop CSV file or click to browse</p>
-                    <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                        Format: content,filename (one per line)<br>
-                        Example: https://example.com,example_qr
-                    </p>
-                    <input type="file" id="csvFile" accept=".csv" style="display: none;">
-                </div>
-                <button id="generateBulkBtn" class="btn btn-secondary" disabled>
-                    <i class="fas fa-qrcode"></i> Generate Bulk QR Codes
-                </button>
-                <div id="bulkProgress" class="hidden" style="margin-top: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>Processing...</span>
-                        <span id="bulkProgressText">0/0</span>
-                    </div>
-                    <div style="height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden;">
-                        <div id="bulkProgressBar" style="height: 100%; background: var(--primary-color); width: 0%; transition: width 0.3s;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-links">
-                    <a href="#privacy">Privacy Policy</a>
-                    <a href="#terms">Terms of Service</a>
-                    <a href="#about">About</a>
-                    <a href="#help">Help & Support</a>
-                    <a href="#github">GitHub</a>
-                </div>
-                <div class="copyright">
-                    <p>© 2024 QRGen Pro. 100% client-side processing. No data leaves your browser.</p>
-                    <p style="margin-top: 5px; font-size: 0.8rem;">
-                        <span class="pwa-badge"><i class="fas fa-mobile-alt"></i> PWA Ready</span>
-                        <span style="margin-left: 10px;">No tracking • No signup • Privacy-first</span>
-                    </p>
-                </div>
+            <div class="policy-content">
+                <h2>1. Introduction</h2>
+                <p>Welcome to QRGen Pro. We are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner. This Privacy Policy explains how we collect, use, and protect information when you use our QR code generator.</p>
+                
+                <h2>2. Information We Collect</h2>
+                <p><strong>No Personal Data Collection:</strong> QRGen Pro operates entirely in your browser. We do not collect, store, or transmit any personal information or data you input into the application.</p>
+                
+                <p><strong>Local Storage:</strong> We use your browser's local storage to save your preferences (theme settings, language selection, color preferences) for a better user experience. This data never leaves your device.</p>
+                
+                <h2>3. How We Use Information</h2>
+                <p>Since we don't collect any personal data, there is no usage of your information. All QR code generation happens locally in your browser using JavaScript.</p>
+                
+                <h2>4. Third-Party Services</h2>
+                <p>We use the following third-party libraries that are loaded from CDN services:</p>
+                <ul>
+                    <li>QRCode.js - For QR code generation</li>
+                    <li>JSZip - For ZIP file creation in bulk generation</li>
+                    <li>FileSaver.js - For file download functionality</li>
+                    <li>Font Awesome - For icons</li>
+                </ul>
+                <p>These libraries may have their own privacy policies. We recommend reviewing them if you have concerns.</p>
+                
+                <h2>5. Cookies and Tracking</h2>
+                <p>We do not use cookies or any tracking technologies. No analytics are collected.</p>
+                
+                <h2>6. Data Security</h2>
+                <p>Since all data processing happens locally in your browser, your data never leaves your device. This provides the highest level of privacy and security.</p>
+                
+                <h2>7. Children's Privacy</h2>
+                <p>Our service is suitable for all ages. Since we don't collect any personal data, we are compliant with children's privacy regulations.</p>
+                
+                <h2>8. Changes to This Policy</h2>
+                <p>We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an updated "Last Updated" date.</p>
+                
+                <h2>9. Contact Information</h2>
+                <p>If you have any questions about this Privacy Policy, please contact us through our GitHub repository.</p>
+                
+                <a href="#" onclick="showMainApp()" class="back-home">
+                    <i class="fas fa-arrow-left"></i> Back to QR Generator
+                </a>
             </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- Terms of Service View -->
+    <div id="termsOfServiceView" class="hidden">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <a href="#" onclick="showMainApp()" class="logo">
+                        <i class="fas fa-qrcode"></i>
+                        <span>QRGen Pro</span>
+                    </a>
+                    <div class="controls">
+                        <button class="theme-toggle" onclick="toggleTheme()">
+                            <i class="fas fa-moon"></i>
+                            <span>Dark</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="policy-container">
+            <div class="policy-header">
+                <h1>Terms of Service</h1>
+                <p>Last Updated: December 2024</p>
+            </div>
+            
+            <div class="policy-content">
+                <h2>1. Acceptance of Terms</h2>
+                <p>By accessing and using QRGen Pro, you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.</p>
+                
+                <h2>2. Description of Service</h2>
+                <p>QRGen Pro is a web-based QR code generator that operates entirely in your browser. The service allows you to create QR codes in various formats, customize their appearance, and download them in PNG or SVG format.</p>
+                
+                <h2>3. User Responsibilities</h2>
+                <p>You agree to use QRGen Pro responsibly and legally. Specifically, you agree not to:</p>
+                <ul>
+                    <li>Use the service for any illegal or unauthorized purpose</li>
+                    <li>Generate QR codes containing malicious content, viruses, or harmful links</li>
+                    <li>Violate any laws in your jurisdiction</li>
+                    <li>Attempt to disrupt or compromise the service's functionality</li>
+                </ul>
+                
+                <h2>4. Intellectual Property</h2>
+                <p>The QR codes you generate are your property. QRGen Pro claims no ownership over the QR codes you create using our service.</p>
+                <p>The QRGen Pro application, including its design, code, and user interface, is protected by copyright and other intellectual property laws.</p>
+                
+                <h2>5. No Warranty</h2>
+                <p>The service is provided "as is" without any warranties, express or implied. We do not guarantee that:</p>
+                <ul>
+                    <li>The service will be uninterrupted or error-free</li>
+                    <li>The QR codes generated will always be scannable</li>
+                    <li>The service will meet your specific requirements</li>
+                </ul>
+                
+                <h2>6. Limitation of Liability</h2>
+                <p>QRGen Pro shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from:</p>
+                <ul>
+                    <li>The use or inability to use the service</li>
+                    <li>Any QR codes generated using the service</li>
+                    <li>Unauthorized access to or alteration of your data</li>
+                    <li>Any other matter relating to the service</li>
+                </ul>
+                
+                <h2>7. Privacy</h2>
+                <p>Your privacy is important to us. Please review our Privacy Policy to understand how we handle your information.</p>
+                
+                <h2>8. Changes to Terms</h2>
+                <p>We reserve the right to modify these terms at any time. We will notify users of any material changes by updating the "Last Updated" date on this page.</p>
+                
+                <h2>9. Termination</h2>
+                <p>We may terminate or suspend access to our service immediately, without prior notice, for conduct that we believe violates these Terms of Service or is harmful to other users.</p>
+                
+                <h2>10. Governing Law</h2>
+                <p>These Terms shall be governed by and construed in accordance with the laws of the jurisdiction where the service is hosted, without regard to its conflict of law provisions.</p>
+                
+                <a href="#" onclick="showMainApp()" class="back-home">
+                    <i class="fas fa-arrow-left"></i> Back to QR Generator
+                </a>
+            </div>
+        </div>
+    </div>
 
     <div id="notification" class="notification"></div>
 
@@ -665,10 +894,10 @@
             currentTheme: 'light',
             logoImage: null,
             qrCodeDataURL: null,
-            qrCodeSVG: null,
             deferredPrompt: null,
             csvData: null,
-            currentQRData: null
+            currentQRData: null,
+            qrCanvas: null
         };
 
         // Language dictionary
@@ -706,45 +935,14 @@
                 install: "Installer",
                 dark: "Sombre",
                 light: "Clair"
-            },
-            PT: {
-                title: "QRGen Pro - Gerador de QR Code Avançado",
-                generate: "Gerar QR Code",
-                downloadPNG: "Baixar PNG",
-                downloadSVG: "Baixar SVG",
-                copy: "Copiar",
-                bulkGenerate: "Gerar QR Codes em Massa",
-                chooseLogo: "Escolher Logo",
-                removeLogo: "Remover",
-                placeholder: "Seu QR code aparecerá aqui\ndepois da geração",
-                processing: "Processando...",
-                copied: "QR Code copiado para a área de transferência!",
-                generated: "QR Code gerado com sucesso!",
-                install: "Instalar",
-                dark: "Escuro",
-                light: "Claro"
-            },
-            UR: {
-                title: "QRGen Pro - جدید ترین QR کوڈ جنریٹر",
-                generate: "QR کوڈ بنائیں",
-                downloadPNG: "PNG ڈاؤن لوڈ کریں",
-                downloadSVG: "SVG ڈاؤن لوڈ کریں",
-                copy: "کاپی کریں",
-                bulkGenerate: "بڑے پیمانے پر QR کوڈ بنائیں",
-                chooseLogo: "لوگو منتخب کریں",
-                removeLogo: "ہٹائیں",
-                placeholder: "آپ کا QR کوڈ یہاں ظاہر ہوگا\nتخلیق کے بعد",
-                processing: "پروسیسنگ...",
-                copied: "QR کوڈ کلپ بورڈ پر کاپی ہوگیا!",
-                generated: "QR کوڈ کامیابی سے بن گیا!",
-                install: "انسٹال کریں",
-                dark: "ڈارک",
-                light: "لائٹ"
             }
         };
 
         // DOM Elements
         const elements = {
+            appView: document.getElementById('appView'),
+            privacyPolicyView: document.getElementById('privacyPolicyView'),
+            termsOfServiceView: document.getElementById('termsOfServiceView'),
             themeToggle: document.getElementById('themeToggle'),
             langToggle: document.getElementById('langToggle'),
             installBtn: document.getElementById('installBtn'),
@@ -876,22 +1074,43 @@
             });
         }
 
+        // View switching functions
+        function showMainApp() {
+            elements.appView.classList.remove('hidden');
+            elements.privacyPolicyView.classList.add('hidden');
+            elements.termsOfServiceView.classList.add('hidden');
+        }
+
+        function showPrivacyPolicy() {
+            elements.appView.classList.add('hidden');
+            elements.privacyPolicyView.classList.remove('hidden');
+            elements.termsOfServiceView.classList.add('hidden');
+        }
+
+        function showTermsOfService() {
+            elements.appView.classList.add('hidden');
+            elements.privacyPolicyView.classList.add('hidden');
+            elements.termsOfServiceView.classList.remove('hidden');
+        }
+
         // Theme functions
         function setTheme(theme) {
             AppState.currentTheme = theme;
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('qrTheme', theme);
             
-            const icon = elements.themeToggle.querySelector('i');
-            const text = elements.themeToggle.querySelector('span');
-            
-            if (theme === 'dark') {
-                icon.className = 'fas fa-sun';
-                text.textContent = translations[AppState.currentLang].light;
-            } else {
-                icon.className = 'fas fa-moon';
-                text.textContent = translations[AppState.currentLang].dark;
-            }
+            // Update all theme toggle buttons
+            document.querySelectorAll('.theme-toggle').forEach(btn => {
+                const icon = btn.querySelector('i');
+                const text = btn.querySelector('span');
+                if (theme === 'dark') {
+                    icon.className = 'fas fa-sun';
+                    text.textContent = translations[AppState.currentLang].light;
+                } else {
+                    icon.className = 'fas fa-moon';
+                    text.textContent = translations[AppState.currentLang].dark;
+                }
+            });
         }
 
         function toggleTheme() {
@@ -911,7 +1130,7 @@
         }
 
         function toggleLanguage() {
-            const languages = ['EN', 'FR', 'PT', 'UR'];
+            const languages = ['EN', 'FR'];
             const currentIndex = languages.indexOf(AppState.currentLang);
             const nextIndex = (currentIndex + 1) % languages.length;
             setLanguage(languages[nextIndex]);
@@ -932,7 +1151,9 @@
                 <p style="color: var(--border-color); text-align: center;">${t.placeholder.replace('\n', '<br>')}</p>`;
             
             const themeText = AppState.currentTheme === 'dark' ? t.light : t.dark;
-            elements.themeToggle.querySelector('span').textContent = themeText;
+            document.querySelectorAll('.theme-toggle').forEach(btn => {
+                btn.querySelector('span').textContent = themeText;
+            });
         }
 
         // Tab switching
@@ -971,7 +1192,7 @@
                     const number = document.getElementById('whatsappNumber').value.trim();
                     const message = document.getElementById('whatsappMessage').value.trim();
                     const cleanNumber = number.replace(/\D/g, '');
-                    if (!cleanNumber) return '';
+                    if (!cleanNumber) return 'https://wa.me/1234567890';
                     const encodedMessage = encodeURIComponent(message);
                     return `https://wa.me/${cleanNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
                 case 'text':
@@ -980,20 +1201,20 @@
                     const to = document.getElementById('emailTo').value.trim();
                     const subject = document.getElementById('emailSubject').value.trim();
                     const body = document.getElementById('emailBody').value.trim();
-                    if (!to) return '';
+                    if (!to) return 'mailto:hello@example.com?subject=QR%20Code&body=Hello';
                     return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 case 'wifi':
                     const ssid = document.getElementById('wifiSsid').value.trim();
                     const password = document.getElementById('wifiPassword').value.trim();
                     const encryption = document.getElementById('wifiEncryption').value;
-                    if (!ssid) return '';
+                    if (!ssid) return 'WIFI:S:HomeWiFi;T:WPA;P:SecurePassword123;;';
                     return `WIFI:S:${ssid};T:${encryption};P:${password};;`;
                 default:
                     return 'https://github.com';
             }
         }
 
-        // Generate QR Code
+        // Generate QR Code - SIMPLIFIED AND WORKING
         function generateQRCode() {
             const data = getFormData();
             AppState.currentQRData = data;
@@ -1007,46 +1228,45 @@
             elements.qrPlaceholder.classList.add('hidden');
 
             // Create container for QR code
-            const qrContainer = document.createElement('div');
-            qrContainer.id = 'qrCanvasContainer';
-            qrContainer.style.width = '100%';
-            qrContainer.style.display = 'flex';
-            qrContainer.style.justifyContent = 'center';
-            qrContainer.style.alignItems = 'center';
-            elements.qrCode.appendChild(qrContainer);
+            const container = document.createElement('div');
+            container.id = 'qrContainer';
+            container.style.width = '100%';
+            container.style.display = 'flex';
+            container.style.justifyContent = 'center';
+            container.style.alignItems = 'center';
+            elements.qrCode.appendChild(container);
 
             try {
-                // Generate QR code using the qrcode library
-                QRCode.toCanvas(qrContainer, data, {
+                // Use the working QRCode.js method
+                const qrCodeOptions = {
+                    text: data,
                     width: size,
                     height: size,
                     colorDark: fgColor,
                     colorLight: bgColor,
-                    margin: 2,
-                    errorCorrectionLevel: 'H'
-                }, function(error, canvas) {
-                    if (error) {
-                        console.error('QR Code generation error:', error);
-                        showNotification('Error generating QR code', 'error');
-                        elements.qrPlaceholder.classList.remove('hidden');
-                        return;
-                    }
+                    correctLevel: QRCode.CorrectLevel.H
+                };
 
-                    // Store canvas for later use
+                // Generate QR code
+                new QRCode(container, qrCodeOptions);
+                
+                // Get the canvas element
+                const canvas = container.querySelector('canvas');
+                if (canvas) {
                     AppState.qrCanvas = canvas;
                     
                     // Add logo if exists
                     if (AppState.logoImage) {
-                        addLogoToQR(canvas);
+                        setTimeout(() => addLogoToQR(canvas), 100);
                     } else {
-                        // Convert canvas to data URL for downloads
+                        // Store data URL
                         AppState.qrCodeDataURL = canvas.toDataURL('image/png');
                         showNotification(translations[AppState.currentLang].generated, 'success');
                     }
-                });
+                }
             } catch (error) {
                 console.error('QR Code generation error:', error);
-                showNotification('Error generating QR code', 'error');
+                showNotification('Error generating QR code. Please try again.', 'error');
                 elements.qrPlaceholder.classList.remove('hidden');
             }
         }
@@ -1057,7 +1277,7 @@
             logoImg.onload = function() {
                 const ctx = canvas.getContext('2d');
                 const size = canvas.width;
-                const logoSize = size * 0.2; // 20% of QR size
+                const logoSize = size * 0.2;
                 const centerX = size / 2 - logoSize / 2;
                 const centerY = size / 2 - logoSize / 2;
                 
@@ -1070,7 +1290,7 @@
                 // Draw logo
                 ctx.drawImage(logoImg, centerX, centerY, logoSize, logoSize);
                 
-                // Convert to data URL for downloads
+                // Update data URL
                 AppState.qrCodeDataURL = canvas.toDataURL('image/png');
                 showNotification(translations[AppState.currentLang].generated, 'success');
             };
@@ -1092,7 +1312,7 @@
                 return;
             }
 
-            if (file.size > 1024 * 1024) { // 1MB limit
+            if (file.size > 1024 * 1024) {
                 showNotification('Logo size should be less than 1MB', 'error');
                 return;
             }
@@ -1124,7 +1344,7 @@
 
         // Download QR code
         async function downloadQRCode(format) {
-            if (!AppState.qrCodeDataURL && !AppState.qrCanvas) {
+            if (!AppState.qrCanvas && !AppState.qrCodeDataURL) {
                 showNotification('Please generate a QR code first', 'error');
                 return;
             }
@@ -1132,20 +1352,18 @@
             const fileName = `qr-code-${Date.now()}.${format}`;
 
             if (format === 'svg') {
-                // Generate SVG version
-                const size = parseInt(elements.sizeSlider.value);
-                const fgColor = elements.fgColor.value;
-                const bgColor = elements.bgColor.value;
-                const data = AppState.currentQRData;
-
                 try {
+                    // Generate SVG
+                    const size = parseInt(elements.sizeSlider.value);
+                    const data = AppState.currentQRData;
+                    
                     const svgString = await new Promise((resolve, reject) => {
                         QRCode.toString(data, {
                             type: 'svg',
                             width: size,
                             color: {
-                                dark: fgColor,
-                                light: bgColor
+                                dark: elements.fgColor.value,
+                                light: elements.bgColor.value
                             },
                             margin: 2,
                             errorCorrectionLevel: 'H'
@@ -1155,91 +1373,56 @@
                         });
                     });
 
-                    // Add logo to SVG if exists
-                    let finalSvg = svgString;
-                    if (AppState.logoImage) {
-                        const parser = new DOMParser();
-                        const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
-                        const svgElement = svgDoc.documentElement;
-
-                        // Create logo group
-                        const logoSize = size * 0.2;
-                        const center = size / 2;
-                        
-                        const logoGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g');
-                        
-                        // Add background circle
-                        const bgCircle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        bgCircle.setAttribute('cx', center);
-                        bgCircle.setAttribute('cy', center);
-                        bgCircle.setAttribute('r', logoSize * 0.7);
-                        bgCircle.setAttribute('fill', bgColor);
-                        logoGroup.appendChild(bgCircle);
-
-                        // Add logo image
-                        const image = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image');
-                        image.setAttribute('href', AppState.logoImage);
-                        image.setAttribute('x', center - logoSize/2);
-                        image.setAttribute('y', center - logoSize/2);
-                        image.setAttribute('width', logoSize);
-                        image.setAttribute('height', logoSize);
-                        image.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-                        logoGroup.appendChild(image);
-
-                        svgElement.appendChild(logoGroup);
-                        finalSvg = new XMLSerializer().serializeToString(svgDoc);
-                    }
-
-                    const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
+                    // Save SVG file
+                    const blob = new Blob([svgString], { type: 'image/svg+xml' });
                     saveAs(blob, fileName);
                     showNotification(`QR Code downloaded as SVG`, 'success');
                 } catch (error) {
-                    console.error('SVG generation error:', error);
-                    showNotification('Error generating SVG', 'error');
+                    console.error('SVG download error:', error);
+                    showNotification('Error downloading SVG', 'error');
                 }
             } else if (format === 'png') {
-                if (AppState.qrCanvas) {
-                    // Get canvas and download
-                    const canvas = AppState.qrCanvas;
-                    canvas.toBlob(function(blob) {
-                        saveAs(blob, fileName);
-                    });
+                try {
+                    if (AppState.qrCanvas) {
+                        // Convert canvas to blob and download
+                        AppState.qrCanvas.toBlob(function(blob) {
+                            saveAs(blob, fileName);
+                        }, 'image/png');
+                    } else if (AppState.qrCodeDataURL) {
+                        // Download from data URL
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = AppState.qrCodeDataURL;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
                     showNotification(`QR Code downloaded as PNG`, 'success');
-                } else if (AppState.qrCodeDataURL) {
-                    // Use data URL
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = AppState.qrCodeDataURL;
-                    link.click();
-                    showNotification(`QR Code downloaded as PNG`, 'success');
+                } catch (error) {
+                    console.error('PNG download error:', error);
+                    showNotification('Error downloading PNG', 'error');
                 }
             }
         }
 
         // Copy QR code to clipboard
         async function copyQRCode() {
-            if (!AppState.qrCanvas && !AppState.qrCodeDataURL) {
+            if (!AppState.qrCanvas) {
                 showNotification('Please generate a QR code first', 'error');
                 return;
             }
 
             try {
-                let blob;
-                if (AppState.qrCanvas) {
-                    // Convert canvas to blob
-                    blob = await new Promise(resolve => {
-                        AppState.qrCanvas.toBlob(resolve);
-                    });
-                } else if (AppState.qrCodeDataURL) {
-                    // Convert data URL to blob
-                    const response = await fetch(AppState.qrCodeDataURL);
-                    blob = await response.blob();
-                }
+                // Convert canvas to blob
+                const blob = await new Promise(resolve => {
+                    AppState.qrCanvas.toBlob(resolve);
+                });
 
                 if (!blob) {
                     throw new Error('Failed to create blob');
                 }
 
+                // Copy to clipboard
                 await navigator.clipboard.write([
                     new ClipboardItem({
                         [blob.type]: blob
@@ -1249,17 +1432,8 @@
                 showNotification(translations[AppState.currentLang].copied, 'success');
             } catch (err) {
                 console.error('Copy failed:', err);
-                // Fallback: copy image data URL as text
-                try {
-                    if (AppState.qrCodeDataURL) {
-                        await navigator.clipboard.writeText(AppState.qrCodeDataURL);
-                        showNotification('QR Code image URL copied to clipboard', 'success');
-                    } else {
-                        throw new Error('No data available');
-                    }
-                } catch (err2) {
-                    showNotification('Failed to copy QR code', 'error');
-                }
+                // Fallback: download the image
+                showNotification('Copy failed. Download the QR code instead.', 'error');
             }
         }
 
@@ -1290,12 +1464,11 @@
             
             let hasData = false;
             lines.forEach((line, index) => {
-                // Simple CSV parsing - split by comma
-                const parts = line.split(',');
-                if (parts.length >= 2 && parts[0].trim()) {
+                const parts = line.split(',').map(part => part.trim());
+                if (parts.length >= 2 && parts[0]) {
                     AppState.csvData.push({
-                        content: parts[0].trim(),
-                        filename: parts[1].trim() || `qr-code-${index + 1}`
+                        content: parts[0],
+                        filename: parts[1] || `qr-code-${index + 1}`
                     });
                     hasData = true;
                 }
@@ -1328,35 +1501,32 @@
             const total = AppState.csvData.length;
             let processed = 0;
 
-            // Process each item
             for (let i = 0; i < total; i++) {
                 const item = AppState.csvData[i];
                 try {
-                    // Create canvas for QR code
+                    // Create container for QR code
+                    const container = document.createElement('div');
                     const canvas = document.createElement('canvas');
-                    canvas.width = size;
-                    canvas.height = size;
+                    container.appendChild(canvas);
                     
                     // Generate QR code
-                    await new Promise((resolve, reject) => {
-                        QRCode.toCanvas(canvas, item.content, {
-                            width: size,
-                            height: size,
-                            colorDark: fgColor,
-                            colorLight: bgColor,
-                            margin: 2,
-                            errorCorrectionLevel: 'H'
-                        }, (error) => {
-                            if (error) reject(error);
-                            else resolve();
-                        });
+                    const qr = new QRCode(container, {
+                        text: item.content,
+                        width: size,
+                        height: size,
+                        colorDark: fgColor,
+                        colorLight: bgColor,
+                        correctLevel: QRCode.CorrectLevel.H
                     });
-
-                    // Convert canvas to blob
+                    
+                    // Wait for QR code to render
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    
+                    // Convert to blob
                     const blob = await new Promise(resolve => {
                         canvas.toBlob(resolve, 'image/png');
                     });
-
+                    
                     if (blob) {
                         zip.file(`${item.filename}.png`, blob);
                     }
@@ -1395,14 +1565,12 @@
 
         // PWA Setup
         function setupPWA() {
-            // Listen for before install prompt
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 AppState.deferredPrompt = e;
                 elements.installBtn.classList.remove('hidden');
             });
 
-            // Install button click
             elements.installBtn.addEventListener('click', async () => {
                 if (!AppState.deferredPrompt) return;
                 
@@ -1417,7 +1585,6 @@
                 AppState.deferredPrompt = null;
             });
 
-            // Listen for app installed
             window.addEventListener('appinstalled', () => {
                 elements.installBtn.classList.add('hidden');
             });
@@ -1435,6 +1602,7 @@
                 elements.notification.classList.add('error');
             } else if (type === 'warning') {
                 elements.notification.style.background = '#f59e0b';
+                elements.notification.classList.add('warning');
             } else {
                 elements.notification.style.background = 'var(--primary-color)';
             }
