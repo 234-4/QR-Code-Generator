@@ -6,7 +6,6 @@
     <meta name="description" content="Privacy-friendly QR Code Generator with multiple formats, bulk generation, and no tracking">
     <meta name="theme-color" content="#3b82f6">
     <title>QRGen Pro - Advanced QR Code Generator</title>
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -665,7 +664,8 @@
             currentLang: 'EN',
             currentTheme: 'light',
             logoImage: null,
-            qrCode: null,
+            qrCodeDataURL: null,
+            qrCodeSVG: null,
             deferredPrompt: null,
             csvData: null,
             currentQRData: null
@@ -796,7 +796,7 @@
             setupPWA();
 
             // Generate initial QR code
-            generateQRCode();
+            setTimeout(() => generateQRCode(), 100);
         }
 
         // Set up all event listeners
@@ -818,17 +818,19 @@
             // Size slider
             elements.sizeSlider.addEventListener('input', function() {
                 elements.sizeValue.textContent = this.value + 'px';
-                updateQRCodeDisplay();
+                if (AppState.currentQRData) {
+                    generateQRCode();
+                }
             });
 
             // Color pickers
             elements.fgColor.addEventListener('change', function() {
                 localStorage.setItem('qrFgColor', this.value);
-                generateQRCode();
+                if (AppState.currentQRData) generateQRCode();
             });
             elements.bgColor.addEventListener('change', function() {
                 localStorage.setItem('qrBgColor', this.value);
-                generateQRCode();
+                if (AppState.currentQRData) generateQRCode();
             });
 
             // Logo upload
@@ -963,26 +965,26 @@
             
             switch(activeTab) {
                 case 'url':
-                    const url = document.getElementById('urlInput').value;
-                    return url.startsWith('http') ? url : 'https://' + url;
+                    const url = document.getElementById('urlInput').value.trim();
+                    return url ? (url.startsWith('http') ? url : 'https://' + url) : 'https://github.com';
                 case 'whatsapp':
-                    const number = document.getElementById('whatsappNumber').value;
-                    const message = document.getElementById('whatsappMessage').value;
+                    const number = document.getElementById('whatsappNumber').value.trim();
+                    const message = document.getElementById('whatsappMessage').value.trim();
                     const cleanNumber = number.replace(/\D/g, '');
                     if (!cleanNumber) return '';
                     const encodedMessage = encodeURIComponent(message);
                     return `https://wa.me/${cleanNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
                 case 'text':
-                    return document.getElementById('textInput').value || '';
+                    return document.getElementById('textInput').value.trim() || 'QRGen Pro - Privacy-friendly QR Code Generator';
                 case 'email':
-                    const to = document.getElementById('emailTo').value;
-                    const subject = document.getElementById('emailSubject').value;
-                    const body = document.getElementById('emailBody').value;
+                    const to = document.getElementById('emailTo').value.trim();
+                    const subject = document.getElementById('emailSubject').value.trim();
+                    const body = document.getElementById('emailBody').value.trim();
                     if (!to) return '';
                     return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 case 'wifi':
-                    const ssid = document.getElementById('wifiSsid').value;
-                    const password = document.getElementById('wifiPassword').value;
+                    const ssid = document.getElementById('wifiSsid').value.trim();
+                    const password = document.getElementById('wifiPassword').value.trim();
                     const encryption = document.getElementById('wifiEncryption').value;
                     if (!ssid) return '';
                     return `WIFI:S:${ssid};T:${encryption};P:${password};;`;
@@ -994,98 +996,90 @@
         // Generate QR Code
         function generateQRCode() {
             const data = getFormData();
-            if (!data) {
-                showNotification('Please enter some content', 'error');
-                return;
-            }
-
             AppState.currentQRData = data;
+            
             const size = parseInt(elements.sizeSlider.value);
             const fgColor = elements.fgColor.value;
             const bgColor = elements.bgColor.value;
 
-            try {
-                // Generate QR code with logo if available
-                generateQRWithLogo(data, size, fgColor, bgColor);
-            } catch (error) {
-                console.error('QR Generation error:', error);
-                showNotification('Error generating QR code', 'error');
-            }
-        }
+            // Clear previous QR code
+            elements.qrCode.innerHTML = '';
+            elements.qrPlaceholder.classList.add('hidden');
 
-        // Generate QR with optional logo
-        async function generateQRWithLogo(data, size, fgColor, bgColor) {
-            // Generate base QR code
-            const qrDataURL = await new Promise((resolve, reject) => {
-                QRCode.toDataURL(data, {
+            // Create container for QR code
+            const qrContainer = document.createElement('div');
+            qrContainer.id = 'qrCanvasContainer';
+            qrContainer.style.width = '100%';
+            qrContainer.style.display = 'flex';
+            qrContainer.style.justifyContent = 'center';
+            qrContainer.style.alignItems = 'center';
+            elements.qrCode.appendChild(qrContainer);
+
+            try {
+                // Generate QR code using the qrcode library
+                QRCode.toCanvas(qrContainer, data, {
                     width: size,
                     height: size,
-                    color: {
-                        dark: fgColor,
-                        light: bgColor
-                    },
+                    colorDark: fgColor,
+                    colorLight: bgColor,
                     margin: 2,
                     errorCorrectionLevel: 'H'
-                }, (err, url) => {
-                    if (err) reject(err);
-                    else resolve(url);
+                }, function(error, canvas) {
+                    if (error) {
+                        console.error('QR Code generation error:', error);
+                        showNotification('Error generating QR code', 'error');
+                        elements.qrPlaceholder.classList.remove('hidden');
+                        return;
+                    }
+
+                    // Store canvas for later use
+                    AppState.qrCanvas = canvas;
+                    
+                    // Add logo if exists
+                    if (AppState.logoImage) {
+                        addLogoToQR(canvas);
+                    } else {
+                        // Convert canvas to data URL for downloads
+                        AppState.qrCodeDataURL = canvas.toDataURL('image/png');
+                        showNotification(translations[AppState.currentLang].generated, 'success');
+                    }
                 });
-            });
-
-            // Create canvas for QR code
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = size;
-            canvas.height = size;
-
-            // Load QR code image
-            const qrImage = new Image();
-            qrImage.onload = () => {
-                // Draw QR code
-                ctx.drawImage(qrImage, 0, 0, size, size);
-
-                // Add logo if exists
-                if (AppState.logoImage) {
-                    const logoImage = new Image();
-                    logoImage.onload = () => {
-                        const logoSize = size * 0.2; // 20% of QR size
-                        const centerX = size / 2 - logoSize / 2;
-                        const centerY = size / 2 - logoSize / 2;
-                        
-                        // Draw white background circle for logo
-                        ctx.beginPath();
-                        ctx.arc(size / 2, size / 2, logoSize / 2 + 5, 0, Math.PI * 2);
-                        ctx.fillStyle = bgColor;
-                        ctx.fill();
-                        
-                        // Draw logo
-                        ctx.drawImage(logoImage, centerX, centerY, logoSize, logoSize);
-                        
-                        // Update display
-                        updateQRDisplay(canvas.toDataURL());
-                    };
-                    logoImage.src = AppState.logoImage;
-                } else {
-                    // Update display without logo
-                    updateQRDisplay(qrDataURL);
-                }
-            };
-            qrImage.src = qrDataURL;
-        }
-
-        // Update QR display
-        function updateQRDisplay(dataURL) {
-            elements.qrPlaceholder.classList.add('hidden');
-            elements.qrCode.innerHTML = `<img src="${dataURL}" alt="QR Code" style="max-width: 100%; height: auto;">`;
-            AppState.qrCode = dataURL;
-            showNotification(translations[AppState.currentLang].generated, 'success');
-        }
-
-        // Update QR code size
-        function updateQRCodeDisplay() {
-            if (AppState.currentQRData) {
-                generateQRCode();
+            } catch (error) {
+                console.error('QR Code generation error:', error);
+                showNotification('Error generating QR code', 'error');
+                elements.qrPlaceholder.classList.remove('hidden');
             }
+        }
+
+        // Add logo to QR code
+        function addLogoToQR(canvas) {
+            const logoImg = new Image();
+            logoImg.onload = function() {
+                const ctx = canvas.getContext('2d');
+                const size = canvas.width;
+                const logoSize = size * 0.2; // 20% of QR size
+                const centerX = size / 2 - logoSize / 2;
+                const centerY = size / 2 - logoSize / 2;
+                
+                // Draw white background circle for logo
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, logoSize / 2 + 5, 0, Math.PI * 2);
+                ctx.fillStyle = elements.bgColor.value;
+                ctx.fill();
+                
+                // Draw logo
+                ctx.drawImage(logoImg, centerX, centerY, logoSize, logoSize);
+                
+                // Convert to data URL for downloads
+                AppState.qrCodeDataURL = canvas.toDataURL('image/png');
+                showNotification(translations[AppState.currentLang].generated, 'success');
+            };
+            logoImg.onerror = function() {
+                console.error('Failed to load logo image');
+                AppState.qrCodeDataURL = canvas.toDataURL('image/png');
+                showNotification('QR Code generated (logo failed to load)', 'warning');
+            };
+            logoImg.src = AppState.logoImage;
         }
 
         // Handle logo upload
@@ -1108,7 +1102,9 @@
                 AppState.logoImage = e.target.result;
                 elements.logoFileName.textContent = file.name;
                 elements.removeLogoBtn.classList.remove('hidden');
-                generateQRCode();
+                if (AppState.currentQRData) {
+                    generateQRCode();
+                }
             };
             reader.onerror = function() {
                 showNotification('Error reading logo file', 'error');
@@ -1121,12 +1117,14 @@
             elements.logoUpload.value = '';
             elements.logoFileName.textContent = 'No logo selected';
             elements.removeLogoBtn.classList.add('hidden');
-            generateQRCode();
+            if (AppState.currentQRData) {
+                generateQRCode();
+            }
         }
 
         // Download QR code
         async function downloadQRCode(format) {
-            if (!AppState.qrCode) {
+            if (!AppState.qrCodeDataURL && !AppState.qrCanvas) {
                 showNotification('Please generate a QR code first', 'error');
                 return;
             }
@@ -1140,82 +1138,108 @@
                 const bgColor = elements.bgColor.value;
                 const data = AppState.currentQRData;
 
-                const svgString = await new Promise((resolve, reject) => {
-                    QRCode.toString(data, {
-                        type: 'svg',
-                        width: size,
-                        color: {
-                            dark: fgColor,
-                            light: bgColor
-                        },
-                        margin: 2,
-                        errorCorrectionLevel: 'H'
-                    }, (err, svg) => {
-                        if (err) reject(err);
-                        else resolve(svg);
+                try {
+                    const svgString = await new Promise((resolve, reject) => {
+                        QRCode.toString(data, {
+                            type: 'svg',
+                            width: size,
+                            color: {
+                                dark: fgColor,
+                                light: bgColor
+                            },
+                            margin: 2,
+                            errorCorrectionLevel: 'H'
+                        }, (err, svg) => {
+                            if (err) reject(err);
+                            else resolve(svg);
+                        });
                     });
-                });
 
-                // Add logo to SVG if exists
-                let finalSvg = svgString;
-                if (AppState.logoImage) {
-                    const parser = new DOMParser();
-                    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
-                    const svgElement = svgDoc.documentElement;
+                    // Add logo to SVG if exists
+                    let finalSvg = svgString;
+                    if (AppState.logoImage) {
+                        const parser = new DOMParser();
+                        const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+                        const svgElement = svgDoc.documentElement;
 
-                    // Create logo group
-                    const logoSize = size * 0.2;
-                    const center = size / 2;
-                    
-                    const logoGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g');
-                    
-                    // Add background circle
-                    const bgCircle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    bgCircle.setAttribute('cx', center);
-                    bgCircle.setAttribute('cy', center);
-                    bgCircle.setAttribute('r', logoSize * 0.7);
-                    bgCircle.setAttribute('fill', bgColor);
-                    logoGroup.appendChild(bgCircle);
+                        // Create logo group
+                        const logoSize = size * 0.2;
+                        const center = size / 2;
+                        
+                        const logoGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        
+                        // Add background circle
+                        const bgCircle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        bgCircle.setAttribute('cx', center);
+                        bgCircle.setAttribute('cy', center);
+                        bgCircle.setAttribute('r', logoSize * 0.7);
+                        bgCircle.setAttribute('fill', bgColor);
+                        logoGroup.appendChild(bgCircle);
 
-                    // Add logo image
-                    const image = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image');
-                    image.setAttribute('href', AppState.logoImage);
-                    image.setAttribute('x', center - logoSize/2);
-                    image.setAttribute('y', center - logoSize/2);
-                    image.setAttribute('width', logoSize);
-                    image.setAttribute('height', logoSize);
-                    image.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-                    logoGroup.appendChild(image);
+                        // Add logo image
+                        const image = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image');
+                        image.setAttribute('href', AppState.logoImage);
+                        image.setAttribute('x', center - logoSize/2);
+                        image.setAttribute('y', center - logoSize/2);
+                        image.setAttribute('width', logoSize);
+                        image.setAttribute('height', logoSize);
+                        image.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                        logoGroup.appendChild(image);
 
-                    svgElement.appendChild(logoGroup);
-                    finalSvg = new XMLSerializer().serializeToString(svgDoc);
+                        svgElement.appendChild(logoGroup);
+                        finalSvg = new XMLSerializer().serializeToString(svgDoc);
+                    }
+
+                    const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
+                    saveAs(blob, fileName);
+                    showNotification(`QR Code downloaded as SVG`, 'success');
+                } catch (error) {
+                    console.error('SVG generation error:', error);
+                    showNotification('Error generating SVG', 'error');
                 }
-
-                const blob = new Blob([finalSvg], { type: 'image/svg+xml' });
-                saveAs(blob, fileName);
             } else if (format === 'png') {
-                const link = document.createElement('a');
-                link.download = fileName;
-                link.href = AppState.qrCode;
-                link.click();
+                if (AppState.qrCanvas) {
+                    // Get canvas and download
+                    const canvas = AppState.qrCanvas;
+                    canvas.toBlob(function(blob) {
+                        saveAs(blob, fileName);
+                    });
+                    showNotification(`QR Code downloaded as PNG`, 'success');
+                } else if (AppState.qrCodeDataURL) {
+                    // Use data URL
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = AppState.qrCodeDataURL;
+                    link.click();
+                    showNotification(`QR Code downloaded as PNG`, 'success');
+                }
             }
-            
-            showNotification(`QR Code downloaded as ${format.toUpperCase()}`, 'success');
         }
 
         // Copy QR code to clipboard
         async function copyQRCode() {
-            if (!AppState.qrCode) {
+            if (!AppState.qrCanvas && !AppState.qrCodeDataURL) {
                 showNotification('Please generate a QR code first', 'error');
                 return;
             }
 
             try {
-                // Convert data URL to blob
-                const response = await fetch(AppState.qrCode);
-                const blob = await response.blob();
-                
-                // Copy to clipboard
+                let blob;
+                if (AppState.qrCanvas) {
+                    // Convert canvas to blob
+                    blob = await new Promise(resolve => {
+                        AppState.qrCanvas.toBlob(resolve);
+                    });
+                } else if (AppState.qrCodeDataURL) {
+                    // Convert data URL to blob
+                    const response = await fetch(AppState.qrCodeDataURL);
+                    blob = await response.blob();
+                }
+
+                if (!blob) {
+                    throw new Error('Failed to create blob');
+                }
+
                 await navigator.clipboard.write([
                     new ClipboardItem({
                         [blob.type]: blob
@@ -1225,10 +1249,14 @@
                 showNotification(translations[AppState.currentLang].copied, 'success');
             } catch (err) {
                 console.error('Copy failed:', err);
-                // Fallback: copy image URL
+                // Fallback: copy image data URL as text
                 try {
-                    await navigator.clipboard.writeText(AppState.qrCode);
-                    showNotification('QR Code URL copied to clipboard', 'success');
+                    if (AppState.qrCodeDataURL) {
+                        await navigator.clipboard.writeText(AppState.qrCodeDataURL);
+                        showNotification('QR Code image URL copied to clipboard', 'success');
+                    } else {
+                        throw new Error('No data available');
+                    }
                 } catch (err2) {
                     showNotification('Failed to copy QR code', 'error');
                 }
@@ -1262,31 +1290,12 @@
             
             let hasData = false;
             lines.forEach((line, index) => {
-                // Handle quoted content with commas
-                const parts = [];
-                let currentPart = '';
-                let inQuotes = false;
-                
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        parts.push(currentPart.trim());
-                        currentPart = '';
-                    } else {
-                        currentPart += char;
-                    }
-                }
-                parts.push(currentPart.trim());
-                
-                // Remove quotes from parts
-                const cleanParts = parts.map(part => part.replace(/^"(.*)"$/, '$1'));
-                
-                if (cleanParts.length >= 2 && cleanParts[0]) {
+                // Simple CSV parsing - split by comma
+                const parts = line.split(',');
+                if (parts.length >= 2 && parts[0].trim()) {
                     AppState.csvData.push({
-                        content: cleanParts[0],
-                        filename: cleanParts[1] || `qr-code-${index + 1}`
+                        content: parts[0].trim(),
+                        filename: parts[1].trim() || `qr-code-${index + 1}`
                     });
                     hasData = true;
                 }
@@ -1319,58 +1328,53 @@
             const total = AppState.csvData.length;
             let processed = 0;
 
-            // Process in batches to prevent UI freeze
-            const batchSize = 5;
-            
-            async function processBatch(startIndex) {
-                const endIndex = Math.min(startIndex + batchSize, total);
-                
-                for (let i = startIndex; i < endIndex; i++) {
-                    const item = AppState.csvData[i];
-                    try {
-                        const qrData = await new Promise((resolve, reject) => {
-                            QRCode.toDataURL(item.content, {
-                                width: size,
-                                height: size,
-                                color: {
-                                    dark: fgColor,
-                                    light: bgColor
-                                },
-                                margin: 2,
-                                errorCorrectionLevel: 'H'
-                            }, (err, url) => {
-                                if (err) reject(err);
-                                else resolve(url);
-                            });
+            // Process each item
+            for (let i = 0; i < total; i++) {
+                const item = AppState.csvData[i];
+                try {
+                    // Create canvas for QR code
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    // Generate QR code
+                    await new Promise((resolve, reject) => {
+                        QRCode.toCanvas(canvas, item.content, {
+                            width: size,
+                            height: size,
+                            colorDark: fgColor,
+                            colorLight: bgColor,
+                            margin: 2,
+                            errorCorrectionLevel: 'H'
+                        }, (error) => {
+                            if (error) reject(error);
+                            else resolve();
                         });
+                    });
 
-                        // Convert data URL to blob
-                        const response = await fetch(qrData);
-                        const blob = await response.blob();
+                    // Convert canvas to blob
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/png');
+                    });
+
+                    if (blob) {
                         zip.file(`${item.filename}.png`, blob);
-                        
-                    } catch (error) {
-                        console.error('Error generating QR for:', item.content, error);
-                        // Continue with other items
                     }
                     
-                    processed++;
-                    const progress = (processed / total) * 100;
-                    elements.bulkProgressBar.style.width = `${progress}%`;
-                    elements.bulkProgressText.textContent = `${processed}/${total}`;
+                } catch (error) {
+                    console.error('Error generating QR for:', item.content, error);
                 }
                 
-                // Continue with next batch if any
-                if (processed < total) {
-                    // Allow UI to update
-                    await new Promise(resolve => setTimeout(resolve, 0));
-                    await processBatch(endIndex);
-                }
+                processed++;
+                const progress = (processed / total) * 100;
+                elements.bulkProgressBar.style.width = `${progress}%`;
+                elements.bulkProgressText.textContent = `${processed}/${total}`;
+                
+                // Allow UI to update
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
 
             try {
-                await processBatch(0);
-                
                 // Generate ZIP file
                 const zipBlob = await zip.generateAsync({ type: 'blob' });
                 saveAs(zipBlob, `qr-codes-bulk-${Date.now()}.zip`);
@@ -1429,6 +1433,8 @@
             } else if (type === 'error') {
                 elements.notification.style.background = '#ef4444';
                 elements.notification.classList.add('error');
+            } else if (type === 'warning') {
+                elements.notification.style.background = '#f59e0b';
             } else {
                 elements.notification.style.background = 'var(--primary-color)';
             }
@@ -1442,65 +1448,6 @@
 
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
-
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-            window.addEventListener('load', () => {
-                // Simple service worker
-                const swContent = `
-                self.addEventListener('install', event => {
-                    self.skipWaiting();
-                });
-                
-                self.addEventListener('fetch', event => {
-                    // Cache-first strategy
-                    event.respondWith(
-                        caches.match(event.request).then(response => {
-                            return response || fetch(event.request);
-                        })
-                    );
-                });
-                `;
-                
-                const blob = new Blob([swContent], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-                
-                navigator.serviceWorker.register(swUrl).then(registration => {
-                    console.log('ServiceWorker registration successful');
-                }).catch(err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-            });
-        }
-
-        // Create manifest.json dynamically
-        const manifest = {
-            "name": "QRGen Pro",
-            "short_name": "QRGen",
-            "description": "Privacy-friendly QR Code Generator",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#3b82f6",
-            "theme_color": "#3b82f6",
-            "icons": [
-                {
-                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzNiODJmNiIgZD0iTTEgMWgxMXYxMUgxVjF6bTEyIDBIMjN2MTFIMTNWMXpNMSAxM2gxMXYxMUgxVjEzem0xMiAwSDIzdjExSDEzVjEzeiIvPjwvc3ZnPg==",
-                    "sizes": "192x192",
-                    "type": "image/svg+xml"
-                },
-                {
-                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzNiODJmNiIgZD0iTTEgMWgxMXYxMUgxVjF6bTEyIDBIMjN2MTFIMTNWMXpNMSAxM2gxMXYxMUgxVjEzem0xMiAwSDIzdjExSDEzVjEzeiIvPjwvc3ZnPg==",
-                    "sizes": "512x512",
-                    "type": "image/svg+xml"
-                }
-            ]
-        };
-
-        // Add manifest link
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
-        document.head.appendChild(manifestLink);
     </script>
 </body>
 </html>
