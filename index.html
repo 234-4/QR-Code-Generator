@@ -3,122 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free QR Code Generator – Lifetime Free | No Signup</title>
-<meta name="description" content="Generate QR codes instantly. Lifetime free, no signup, no tracking. Create QR codes for URLs, text, WiFi, WhatsApp and more.">
+<title>Free QR Code Generator – No Signup</title>
 
-<!-- Performance -->
-<link rel="preconnect" href="https://cdnjs.cloudflare.com">
-<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#5b5fff">
-
-<!-- Qrious -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" defer></script>
-
-<!-- FAQ Schema -->
-<script type="application/ld+json">
-{
-"@context":"https://schema.org",
-"@type":"FAQPage",
-"mainEntity":[
-{
-"@type":"Question",
-"name":"Is this QR code generator free forever?",
-"acceptedAnswer":{"@type":"Answer","text":"Yes, this QR code generator is 100% free for lifetime with no signup required."}
-},
-{
-"@type":"Question",
-"name":"Do QR codes expire?",
-"acceptedAnswer":{"@type":"Answer","text":"No. All generated QR codes are static and never expire."}
-},
-{
-"@type":"Question",
-"name":"Is my data stored?",
-"acceptedAnswer":{"@type":"Answer","text":"No. We do not store or track any user data."}
-}
-]
-}
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
 <style>
-*{box-sizing:border-box;font-family:system-ui}
 body{
-margin:0;
-min-height:100vh;
-display:flex;
-align-items:center;
-justify-content:center;
-background:linear-gradient(135deg,#1e1e2f,#2d2d44);
-color:#fff;
+  margin:0;
+  font-family:system-ui,Arial;
+  background:linear-gradient(135deg,#0f1025,#1b1d3a);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+  color:#fff;
 }
-body.light{
-background:linear-gradient(135deg,#f4f6ff,#dde2ff);
-color:#111;
-}
+
 .app{
-background:#121225;
-padding:20px;
-border-radius:14px;
-width:100%;
-max-width:420px;
-position:relative;
-box-shadow:0 15px 40px rgba(0,0,0,.4);
+  width:100%;
+  max-width:380px;
+  background:#12132b;
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
 }
-body.light .app{background:#fff}
 
-h1{text-align:center;font-size:1.4rem;margin-bottom:10px}
+select,input,button,textarea{
+  width:100%;
+  border:none;
+  border-radius:10px;
+  padding:12px;
+  margin-top:10px;
+  font-size:1rem;
+}
 
-input,button,select{
-width:100%;
-padding:10px;
-border-radius:8px;
-border:none;
-margin-top:10px;
-font-size:.95rem;
+input,textarea{
+  background:#fff;
 }
 
 button{
-background:#5b5fff;
-color:#fff;
-cursor:pointer;
+  background:#5f66ff;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
 }
-button:hover{opacity:.9}
+
+button:hover{
+  opacity:.9;
+}
 
 canvas{
-display:block;
-margin:15px auto;
-background:#fff;
-padding:8px;
-border-radius:8px;
+  display:block;
+  margin:20px auto;
+  background:#fff;
+  border-radius:12px;
 }
 
-.footer{
-text-align:center;
-font-size:.8rem;
-opacity:.7;
-margin-top:15px;
+.small{
+  font-size:.85rem;
+  opacity:.8;
+  text-align:center;
+  margin-top:15px;
 }
 
-#themeToggle{
-position:absolute;
-top:12px;
-right:12px;
-width:36px;
-height:36px;
-border-radius:50%;
-border:none;
-cursor:pointer;
-font-size:18px;
-}
-
-pre{
-background:rgba(255,255,255,.1);
-padding:10px;
-border-radius:8px;
-font-size:.75rem;
-overflow:auto;
+textarea{
+  background:#1d1f3a;
+  color:#fff;
+  height:90px;
+  font-size:.85rem;
 }
 </style>
 </head>
@@ -127,78 +80,57 @@ overflow:auto;
 
 <div class="app">
 
-<button id="themeToggle">🌙</button>
-
 <select id="lang">
-<option value="en">English</option>
-<option value="fr">Français</option>
-<option value="pt">Português</option>
-<option value="ur">اردو</option>
+  <option>English</option>
 </select>
 
-<h1 id="title">Free QR Code Generator</h1>
+<h2 style="text-align:center;margin:10px 0">Free QR Code Generator</h2>
 
-<input id="data" type="text" placeholder="Enter your content">
+<input id="text" placeholder="Enter your content">
 
 <button id="generate">Generate QR</button>
 
-<canvas id="qr"></canvas>
+<canvas id="qrCanvas"></canvas>
 
 <button id="download">Download PNG</button>
 
-<h3 style="margin-top:15px;font-size:1rem">Bulk QR CSV Format</h3>
-<pre>
+<h4 style="margin-top:20px">Bulk QR CSV Format</h4>
+
+<textarea readonly>
 filename,content
 google,https://google.com
 wifi,MyWifi;password123
 whatsapp,Hello from QR tool
-</pre>
+</textarea>
 
-<div class="footer">
-Lifetime free • No signup • No tracking
+<div class="small">
+✔ Lifetime free · No signup · No tracking
 </div>
 
 </div>
 
 <script>
-const qrCanvas=document.getElementById('qr');
-const qr=new QRious({element:qrCanvas,size:250,value:''});
+const qr = new QRious({
+  element: document.getElementById('qrCanvas'),
+  size: 240,
+  value: ' '
+});
 
-document.getElementById('generate').onclick=()=>{
-const v=data.value.trim();
-if(!v)return alert("Enter content");
-qr.value=v;
+document.getElementById('generate').onclick = () => {
+  const val = document.getElementById('text').value.trim();
+  if(!val){
+    alert('Please enter content');
+    return;
+  }
+  qr.value = val;
 };
 
-download.onclick=()=>{
-const a=document.createElement('a');
-a.href=qrCanvas.toDataURL('image/png');
-a.download='qr-code.png';
-a.click();
+document.getElementById('download').onclick = () => {
+  const link = document.createElement('a');
+  link.href = qr.canvas.toDataURL('image/png');
+  link.download = 'qr-code.png';
+  link.click();
 };
-
-themeToggle.onclick=()=>{
-document.body.classList.toggle('light');
-themeToggle.textContent=
-document.body.classList.contains('light')?'☀️':'🌙';
-};
-
-const t={
-en:{title:"Free QR Code Generator",ph:"Enter your content"},
-fr:{title:"Générateur de QR Code Gratuit",ph:"Entrez votre contenu"},
-pt:{title:"Gerador de QR Code Gratuito",ph:"Digite seu conteúdo"},
-ur:{title:"مفت QR کوڈ جنریٹر",ph:"مواد درج کریں"}
-};
-
-lang.onchange=()=>{
-const l=t[lang.value];
-title.innerText=l.title;
-data.placeholder=l.ph;
-};
-
-if('serviceWorker'in navigator){
-navigator.serviceWorker.register('/service-worker.js');
-}
 </script>
 
 </body>
