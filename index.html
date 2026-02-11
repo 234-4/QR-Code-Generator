@@ -6,12 +6,14 @@
 <title>Free QR Code Generator – No Signup</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 <style>
 :root{
   --bg:#0f1025;
   --card:#15163a;
-  --text:#ffffff;
+  --text:#fff;
   --btn:#5f66ff;
 }
 
@@ -19,7 +21,6 @@ body.light{
   --bg:#f2f4ff;
   --card:#ffffff;
   --text:#111;
-  --btn:#5f66ff;
 }
 
 body{
@@ -28,18 +29,18 @@ body{
   background:var(--bg);
   min-height:100vh;
   display:flex;
-  align-items:center;
   justify-content:center;
   color:var(--text);
 }
 
 .app{
   width:100%;
-  max-width:380px;
+  max-width:420px;
+  padding:20px;
   background:var(--card);
   border-radius:18px;
-  padding:20px;
-  box-shadow:0 20px 50px rgba(0,0,0,.4);
+  margin:15px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
 }
 
 .top{
@@ -47,16 +48,12 @@ body{
   gap:10px;
 }
 
-select, input, button, textarea{
+select,input,button,textarea{
   width:100%;
-  padding:12px;
+  padding:11px;
   border-radius:10px;
   border:none;
-  font-size:1rem;
-}
-
-input{
-  background:#fff;
+  font-size:.95rem;
 }
 
 button{
@@ -66,14 +63,34 @@ button{
   cursor:pointer;
 }
 
-button.toggle{
-  width:48px;
-  padding:0;
+.toggle{width:46px}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  margin-top:10px;
+}
+
+.tabs button{
+  flex:1;
+  background:rgba(255,255,255,.15);
+}
+
+.tabs .active{
+  background:#fff;
+  color:#000;
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
 }
 
 canvas{
   display:block;
-  margin:20px auto;
+  margin:16px auto;
   background:#fff;
   border-radius:12px;
 }
@@ -82,7 +99,6 @@ textarea{
   background:rgba(0,0,0,.2);
   color:var(--text);
   height:90px;
-  font-size:.85rem;
 }
 
 .small{
@@ -108,24 +124,46 @@ textarea{
   <button class="toggle" id="theme">🌙</button>
 </div>
 
-<h2 id="title" style="text-align:center;margin:12px 0">
-Free QR Code Generator
-</h2>
+<h2 id="title" style="text-align:center">Free QR Code Generator</h2>
 
-<input id="text" placeholder="Enter your content">
+<input id="data" placeholder="https://example.com">
 
-<button id="generate">Generate QR</button>
+<div class="tabs">
+  <button class="active" data-type="url">URL</button>
+  <button data-type="whatsapp">WhatsApp</button>
+  <button data-type="text">Text</button>
+  <button data-type="email">Email</button>
+  <button data-type="wifi">WiFi</button>
+</div>
+
+<div class="actions">
+  <input type="color" id="qrColor" value="#000000">
+  <input type="color" id="bgColor" value="#ffffff">
+</div>
+
+<input type="range" id="size" min="150" max="600" value="250">
+
+<input type="file" id="logo" accept="image/*">
 
 <canvas id="qrCanvas"></canvas>
 
-<button id="download">Download PNG</button>
+<div class="actions">
+  <button id="png">PNG</button>
+  <button id="svg">SVG</button>
+</div>
 
-<h4 style="margin-top:20px">Bulk QR CSV Format</h4>
+<button id="copy">Copy QR</button>
+
+<hr style="opacity:.3;margin:20px 0">
+
+<h4>Bulk QR CSV</h4>
+<input type="file" id="csv" accept=".csv">
+<button id="bulk">Generate ZIP</button>
 
 <textarea readonly>
 filename,content
 google,https://google.com
-wifi,MyWifi;password123
+wifi,OfficeWifi;password123
 whatsapp,Hello from QR tool
 </textarea>
 
@@ -136,63 +174,108 @@ whatsapp,Hello from QR tool
 </div>
 
 <script>
-/* ---------- QR ---------- */
 const qr = new QRious({
-  element: document.getElementById('qrCanvas'),
-  size: 240,
+  element: qrCanvas,
+  size: 250,
   value: ' '
 });
 
-generate.onclick = () => {
-  const v = text.value.trim();
-  if(!v) return alert('Enter content');
-  qr.value = v;
-};
+let type='url';
 
-download.onclick = () => {
-  const a = document.createElement('a');
-  a.href = qr.canvas.toDataURL();
-  a.download = 'qr-code.png';
+document.querySelectorAll('.tabs button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    type=b.dataset.type;
+    update();
+  };
+});
+
+function format(v){
+  if(type==='whatsapp') return 'https://wa.me/?text='+encodeURIComponent(v);
+  if(type==='email') return 'mailto:'+v;
+  if(type==='wifi'){
+    const [s,p]=v.split(';');
+    return `WIFI:T:WPA;S:${s};P:${p};;`;
+  }
+  return v;
+}
+
+function update(){
+  const v=format(data.value.trim());
+  qr.value=v||' ';
+  qr.size=size.value;
+  qr.foreground=qrColor.value;
+  qr.background=bgColor.value;
+
+  if(logo.files[0]){
+    const r=new FileReader();
+    r.onload=e=>{
+      const ctx=qrCanvas.getContext('2d');
+      const img=new Image();
+      img.onload=()=>{
+        const s=qr.size*0.22;
+        ctx.drawImage(img,(qr.size-s)/2,(qr.size-s)/2,s,s);
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(logo.files[0]);
+  }
+}
+
+document.querySelectorAll('input').forEach(i=>i.oninput=update);
+
+png.onclick=()=>{
+  const a=document.createElement('a');
+  a.href=qrCanvas.toDataURL();
+  a.download='qr.png';
   a.click();
 };
 
-/* ---------- THEME ---------- */
-theme.onclick = () => {
-  document.body.classList.toggle('light');
-  theme.textContent =
-    document.body.classList.contains('light') ? '🌞' : '🌙';
+svg.onclick=()=>{
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${qr.size}" height="${qr.size}">
+  <image href="${qrCanvas.toDataURL()}" width="100%" height="100%"/>
+  </svg>`;
+  saveAs(new Blob([svg],{type:'image/svg+xml'}),'qr.svg');
 };
 
-/* ---------- LANGUAGE ---------- */
-const t = {
-  en:{
-    title:'Free QR Code Generator',
-    placeholder:'Enter your content',
-    btn:'Generate QR'
-  },
-  fr:{
-    title:'Générateur de QR Code Gratuit',
-    placeholder:'Entrez votre contenu',
-    btn:'Générer QR'
-  },
-  pt:{
-    title:'Gerador de QR Code Gratuito',
-    placeholder:'Digite seu conteúdo',
-    btn:'Gerar QR'
-  },
-  ur:{
-    title:'مفت QR کوڈ جنریٹر',
-    placeholder:'مواد درج کریں',
-    btn:'کیو آر بنائیں'
+copy.onclick=()=>{
+  qrCanvas.toBlob(b=>navigator.clipboard.write([new ClipboardItem({'image/png':b})]));
+  alert('Copied!');
+};
+
+bulk.onclick=async()=>{
+  if(!csv.files[0]) return alert('Upload CSV');
+  const text=await csv.files[0].text();
+  const rows=text.trim().split('\n').slice(1);
+  const zip=new JSZip();
+
+  for(const r of rows){
+    const [n,v]=r.split(',');
+    qr.value=v.trim();
+    zip.file(n+'.png',qrCanvas.toDataURL().split(',')[1],{base64:true});
   }
+  zip.generateAsync({type:'blob'}).then(b=>saveAs(b,'qr-codes.zip'));
 };
 
-lang.onchange = () => {
-  const l = t[lang.value];
-  title.innerText = l.title;
-  text.placeholder = l.placeholder;
-  generate.innerText = l.btn;
+theme.onclick=()=>{
+  document.body.classList.toggle('light');
+  theme.textContent=document.body.classList.contains('light')?'🌞':'🌙';
 };
+
+const t={
+en:{title:'Free QR Code Generator',ph:'Enter content'},
+fr:{title:'Générateur QR Gratuit',ph:'Entrez le contenu'},
+pt:{title:'Gerador QR Gratuito',ph:'Digite o conteúdo'},
+ur:{title:'مفت QR کوڈ جنریٹر',ph:'مواد درج کریں'}
+};
+
+lang.onchange=()=>{
+  title.innerText=t[lang.value].title;
+  data.placeholder=t[lang.value].ph;
+};
+
+update();
 </script>
 
 </body>
