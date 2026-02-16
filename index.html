@@ -1,1 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Gen Pro - Working QR Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* [Keep all the CSS from previous version - it's fine] */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        :root { --bg: #ffffff; --surface: #f8fafc; --text: #1e293b; --border: #e2e8f0; --primary: #3b82f6; --success: #10b981; --radius: 16px; }
+        [data-theme="dark"] { --bg: #0f172a; --surface: #1e293b; --text: #f1f5f9; --border: #334155; --primary: #60a5fa; --success: #34d399; }
+        body { background: var(--bg); color: var(--text); transition: 0.3s; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 0; position: sticky; top: 0; z-index: 100; }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold; color: var(--primary); text-decoration: none; }
+        .btn { padding: 10px 20px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+        .card-title { font-size: 20px; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+        .tab { padding: 10px 20px; background: var(--bg); border: 1px solid var(--border); border-radius: 30px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; }
+        input, textarea, select { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 15px; }
+        input:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
+        .qr-preview { background: white; border-radius: var(--radius); padding: 30px; display: flex; justify-content: center; align-items: center; min-height: 300px; margin-bottom: 20px; }
+        #qrContainer { display: flex; justify-content: center; align-items: center; }
+        .placeholder { text-align: center; color: #94a3b8; }
+        .placeholder i { font-size: 80px; margin-bottom: 15px; opacity: 0.5; }
+        .controls { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+        .control-item { flex: 1; min-width: 150px; }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .advanced { margin-top: 30px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+        .footer { background: var(--surface); border-top: 1px solid var(--border); padding: 40px 0; margin-top: 60px; }
+        .footer-content { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px; }
+        .footer-links { display: flex; flex-direction: column; gap: 12px; }
+        .footer-links a { color: var(--text); text-decoration: none; }
+        .footer-links a:hover { color: var(--primary); }
+        .policy-page { max-width: 800px; margin: 40px auto; padding: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+        .hidden { display: none !important; }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 16px 24px; background: var(--success); color: white; border-radius: 12px; transform: translateX(400px); transition: 0.3s; z-index: 1000; }
+        .notification.show { transform: translateX(0); }
+        .notification.error { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <!-- [Keep the HTML structure exactly as before - it's fine] -->
+    <div id="app">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <a href="#" onclick="showMain()" class="logo">
+                    <i class="fas fa-qrcode"></i>
+                    QR Gen Pro
+                </a>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="toggleTheme()" class="btn-outline btn" id="themeBtn">
+                        <i class="fas fa-moon"></i> Dark
+                    </button>
+                    <button onclick="toggleLanguage()" class="btn-outline btn" id="langBtn">
+                        <i class="fas fa-language"></i> EN
+                    </button>
+                    <button id="installBtn" class="btn-success btn hidden">
+                        <i class="fas fa-download"></i> Install
+                    </button>
+                </div>
+            </div>
+        </div>
 
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Main View -->
+            <div id="mainView">
+                <div class="grid">
+                    <!-- Left Column -->
+                    <div class="card">
+                        <div class="card-title"><i class="fas fa-edit"></i> Create QR Code</div>
+                        <div class="tabs" id="tabContainer">
+                            <div class="tab active" onclick="switchTab('url')">URL</div>
+                            <div class="tab" onclick="switchTab('whatsapp')">WhatsApp</div>
+                            <div class="tab" onclick="switchTab('text')">Text</div>
+                            <div class="tab" onclick="switchTab('email')">Email</div>
+                            <div class="tab" onclick="switchTab('wifi')">WiFi</div>
+                        </div>
+
+                        <!-- Forms -->
+                        <div id="urlForm">
+                            <div class="form-group">
+                                <label>Website URL</label>
+                                <input type="url" id="urlInput" value="https://example.com">
+                            </div>
+                        </div>
+                        <div id="whatsappForm" class="hidden">
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="whatsappNumber" value="+1234567890">
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea id="whatsappMessage" rows="3">Hello</textarea>
+                            </div>
+                        </div>
+                        <div id="textForm" class="hidden">
+                            <div class="form-group">
+                                <label>Text Content</label>
+                                <textarea id="textInput" rows="5">QR Gen Pro</textarea>
+                            </div>
+                        </div>
+                        <div id="emailForm" class="hidden">
+                            <div class="form-group">
+                                <label>To Email</label>
+                                <input type="email" id="emailTo" value="hello@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" id="emailSubject" value="QR Code">
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea id="emailBody" rows="3">Scan this QR</textarea>
+                            </div>
+                        </div>
+                        <div id="wifiForm" class="hidden">
+                            <div class="form-group">
+                                <label>Network Name</label>
+                                <input type="text" id="wifiSsid" value="HomeWiFi">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" id="wifiPassword" value="password">
+                            </div>
+                            <div class="form-group">
+                                <label>Encryption</label>
+                                <select id="wifiEncryption">
+                                    <option value="WPA">WPA/WPA2</option>
+                                    <option value="WEP">WEP</option>
+                                    <option value="nopass">No Encryption</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="generateQR()" class="btn" style="width: 100%; margin-top: 10px;">
+                            <i class="fas fa-bolt"></i> Generate QR Code
+                        </button>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="card">
+                        <div class="card-title"><i class="fas fa-eye"></i> Preview</div>
+                        <div class="qr-preview">
+                            <div id="qrContainer">
+                                <div class="placeholder">
+                                    <i class="fas fa-qrcode"></i>
+                                    <p>Click Generate to create QR code</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="controls">
+                            <div class="control-item">
+                                <label>Size: <span id="sizeDisplay">250px</span></label>
+                                <input type="range" id="sizeSlider" min="150" max="400" value="250" oninput="updateSize()">
+                            </div>
+                            <div class="control-item">
+                                <label>Colors</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="color" id="fgColor" value="#000000">
+                                    <input type="color" id="bgColor" value="#ffffff">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button onclick="downloadPNG()" class="btn-success btn"><i class="fas fa-download"></i> PNG</button>
+                            <button onclick="downloadSVG()" class="btn-success btn"><i class="fas fa-download"></i> SVG</button>
+                            <button onclick="copyQR()" class="btn"><i class="fas fa-copy"></i> Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="advanced">
+                    <div class="card-title"><i class="fas fa-cogs"></i> Advanced Options</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <label><i class="fas fa-image"></i> Add Logo</label>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <input type="file" id="logoInput" accept="image/*" style="display: none;">
+                                <button onclick="document.getElementById('logoInput').click()" class="btn-outline btn">Choose</button>
+                                <span id="logoName">No file</span>
+                                <button onclick="removeLogo()" id="removeLogoBtn" class="btn-outline btn hidden">✕</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label><i class="fas fa-layer-group"></i> Bulk (CSV)</label>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <input type="file" id="csvInput" accept=".csv" style="display: none;">
+                                <button onclick="document.getElementById('csvInput').click()" class="btn-outline btn">Upload</button>
+                                <button onclick="generateBulk()" id="bulkBtn" class="btn-success btn" disabled>ZIP</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Policy -->
+            <div id="privacyView" class="hidden">
+                <div class="policy-page">
+                    <h1>Privacy Policy</h1>
+                    <p>No data collection. Everything runs in your browser.</p>
+                    <button onclick="showMain()" class="btn"><i class="fas fa-arrow-left"></i> Back</button>
+                </div>
+            </div>
+
+            <!-- Terms -->
+            <div id="termsView" class="hidden">
+                <div class="policy-page">
+                    <h1>Terms of Service</h1>
+                    <p>Free to use. No warranty.</p>
+                    <button onclick="showMain()" class="btn"><i class="fas fa-arrow-left"></i> Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <h3>QR Gen Pro</h3>
+                    <p>100% client-side</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Legal</h3>
+                    <a href="#" onclick="showPrivacy()">Privacy</a>
+                    <a href="#" onclick="showTerms()">Terms</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <!-- FIXED: Load QRCode library with fallback -->
+    <script>
+        // FIX 1: Load QRCode library with error handling
+        function loadQRCodeLibrary() {
+            return new Promise((resolve, reject) => {
+                // Try primary CDN
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+                script.onload = () => {
+                    console.log('QRCode library loaded');
+                    resolve();
+                };
+                script.onerror = () => {
+                    console.warn('Primary CDN failed, trying fallback...');
+                    // Try fallback CDN
+                    const fallbackScript = document.createElement('script');
+                    fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js';
+                    fallbackScript.onload = resolve;
+                    fallbackScript.onerror = reject;
+                    document.head.appendChild(fallbackScript);
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        // FIX 2: Initialize after library loads
+        loadQRCodeLibrary().then(() => {
+            console.log('QRCode library ready');
+            initializeApp();
+        }).catch(() => {
+            console.error('Failed to load QRCode library');
+            document.getElementById('qrContainer').innerHTML = `
+                <div class="placeholder">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Failed to load QR library. Please refresh.</p>
+                </div>
+            `;
+        });
+
+        // App State
+        const App = {
+            theme: localStorage.getItem('theme') || 'light',
+            lang: localStorage.getItem('lang') || 'EN',
+            currentTab: 'url',
+            qrCanvas: null,
+            logoData: null,
+            csvData: [],
+            fgColor: '#000000',
+            bgColor: '#ffffff',
+            size: 250
+        };
+
+        // FIX 3: QR Generation with proper error handling
+        function generateQR() {
+            const data = getQRData();
+            if (!data) {
+                showNotification('Please enter content', 'error');
+                return;
+            }
+
+            const size = parseInt(document.getElementById('sizeSlider').value);
+            const fg = document.getElementById('fgColor').value;
+            const bg = document.getElementById('bgColor').value;
+
+            const container = document.getElementById('qrContainer');
+            container.innerHTML = ''; // Clear
+
+            try {
+                // FIX: Use QRCode.toCanvas with proper callback
+                const canvas = document.createElement('canvas');
+                
+                QRCode.toCanvas(canvas, data, {
+                    width: size,
+                    margin: 2,
+                    color: {
+                        dark: fg,
+                        light: bg
+                    },
+                    errorCorrectionLevel: 'H'
+                }, function(err) {
+                    if (err) {
+                        console.error('QR Error:', err);
+                        container.innerHTML = '<div class="placeholder"><i class="fas fa-exclamation-triangle"></i><p>Generation failed</p></div>';
+                        showNotification('QR generation failed', 'error');
+                        return;
+                    }
+
+                    // Success - add canvas to container
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.height = 'auto';
+                    container.appendChild(canvas);
+                    
+                    App.qrCanvas = canvas;
+                    
+                    // Add logo if exists
+                    if (App.logoData) {
+                        addLogoToQR();
+                    }
+                    
+                    showNotification('QR Code generated!', 'success');
+                });
+            } catch (error) {
+                console.error('Generation error:', error);
+                container.innerHTML = '<div class="placeholder"><i class="fas fa-exclamation-triangle"></i><p>Error</p></div>';
+            }
+        }
+
+        // FIX 4: Logo addition with proper timing
+        function addLogoToQR() {
+            if (!App.qrCanvas || !App.logoData) return;
+            
+            const canvas = App.qrCanvas;
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const logoSize = size * 0.2;
+            const centerX = size / 2 - logoSize / 2;
+            const centerY = size / 2 - logoSize / 2;
+
+            const img = new Image();
+            img.crossOrigin = 'Anonymous'; // FIX: Add crossOrigin
+            img.onload = function() {
+                // Draw white background
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, logoSize / 2 + 5, 0, Math.PI * 2);
+                ctx.fillStyle = document.getElementById('bgColor').value;
+                ctx.fill();
+                
+                // Draw logo
+                ctx.drawImage(img, centerX, centerY, logoSize, logoSize);
+                
+                // Update display
+                showNotification('Logo added!', 'success');
+            };
+            img.onerror = function() {
+                console.error('Logo failed to load');
+                showNotification('Logo failed to load', 'error');
+            };
+            img.src = App.logoData;
+        }
+
+        // Get QR data
+        function getQRData() {
+            switch(App.currentTab) {
+                case 'url': return document.getElementById('urlInput').value || 'https://example.com';
+                case 'whatsapp': 
+                    let num = document.getElementById('whatsappNumber').value.replace(/\D/g, '');
+                    let msg = document.getElementById('whatsappMessage').value;
+                    return `https://wa.me/${num}${msg ? '?text=' + encodeURIComponent(msg) : ''}`;
+                case 'text': return document.getElementById('textInput').value || 'QR Gen Pro';
+                case 'email':
+                    let to = document.getElementById('emailTo').value;
+                    let sub = document.getElementById('emailSubject').value;
+                    let body = document.getElementById('emailBody').value;
+                    return `mailto:${to}?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`;
+                case 'wifi':
+                    let ssid = document.getElementById('wifiSsid').value;
+                    let pass = document.getElementById('wifiPassword').value;
+                    let enc = document.getElementById('wifiEncryption').value;
+                    return `WIFI:S:${ssid};T:${enc};P:${pass};;`;
+                default: return 'https://example.com';
+            }
+        }
+
+        // FIX 5: Download functions
+        function downloadPNG() {
+            if (!App.qrCanvas) {
+                showNotification('Generate QR first', 'error');
+                return;
+            }
+            
+            App.qrCanvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `qrcode-${Date.now()}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showNotification('PNG downloaded!', 'success');
+            });
+        }
+
+        function downloadSVG() {
+            const data = getQRData();
+            const size = parseInt(document.getElementById('sizeSlider').value);
+            const fg = document.getElementById('fgColor').value;
+            const bg = document.getElementById('bgColor').value;
+
+            QRCode.toString(data, {
+                type: 'svg',
+                width: size,
+                color: { dark: fg, light: bg },
+                margin: 2
+            }, function(err, svg) {
+                if (err) {
+                    showNotification('SVG failed', 'error');
+                    return;
+                }
+                
+                const blob = new Blob([svg], {type: 'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `qrcode-${Date.now()}.svg`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showNotification('SVG downloaded!', 'success');
+            });
+        }
+
+        async function copyQR() {
+            if (!App.qrCanvas) {
+                showNotification('Generate QR first', 'error');
+                return;
+            }
+
+            try {
+                const blob = await new Promise(resolve => App.qrCanvas.toBlob(resolve));
+                await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+                showNotification('Copied!', 'success');
+            } catch {
+                showNotification('Copy failed', 'error');
+            }
+        }
+
+        // Logo handling
+        document.getElementById('logoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    App.logoData = ev.target.result;
+                    document.getElementById('logoName').textContent = file.name;
+                    document.getElementById('removeLogoBtn').classList.remove('hidden');
+                    
+                    if (App.qrCanvas) {
+                        addLogoToQR();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function removeLogo() {
+            App.logoData = null;
+            document.getElementById('logoInput').value = '';
+            document.getElementById('logoName').textContent = 'No file';
+            document.getElementById('removeLogoBtn').classList.add('hidden');
+            if (App.qrCanvas) generateQR();
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            App.currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('[id$="Form"]').forEach(f => f.classList.add('hidden'));
+            document.getElementById(tab + 'Form').classList.remove('hidden');
+            generateQR();
+        }
+
+        function updateSize() {
+            const slider = document.getElementById('sizeSlider');
+            document.getElementById('sizeDisplay').textContent = slider.value + 'px';
+            App.size = parseInt(slider.value);
+            generateQR();
+        }
+
+        // Theme
+        function toggleTheme() {
+            App.theme = App.theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', App.theme);
+            localStorage.setItem('theme', App.theme);
+            document.getElementById('themeBtn').innerHTML = App.theme === 'light' 
+                ? '<i class="fas fa-moon"></i> Dark' 
+                : '<i class="fas fa-sun"></i> Light';
+        }
+
+        function toggleLanguage() {
+            App.lang = App.lang === 'EN' ? 'FR' : 'EN';
+            localStorage.setItem('lang', App.lang);
+            document.getElementById('langBtn').innerHTML = `<i class="fas fa-language"></i> ${App.lang}`;
+        }
+
+        // Navigation
+        function showMain() {
+            document.getElementById('mainView').classList.remove('hidden');
+            document.getElementById('privacyView').classList.add('hidden');
+            document.getElementById('termsView').classList.add('hidden');
+        }
+
+        function showPrivacy() {
+            document.getElementById('mainView').classList.add('hidden');
+            document.getElementById('privacyView').classList.remove('hidden');
+            document.getElementById('termsView').classList.add('hidden');
+        }
+
+        function showTerms() {
+            document.getElementById('mainView').classList.add('hidden');
+            document.getElementById('privacyView').classList.add('hidden');
+            document.getElementById('termsView').classList.remove('hidden');
+        }
+
+        // Notification
+        function showNotification(msg, type = 'info') {
+            const notif = document.getElementById('notification');
+            notif.textContent = msg;
+            notif.className = 'notification';
+            notif.classList.add('show');
+            notif.style.background = type === 'error' ? '#ef4444' : '#10b981';
+            setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        // Initialize
+        function initializeApp() {
+            // Set theme
+            document.documentElement.setAttribute('data-theme', App.theme);
+            document.getElementById('themeBtn').innerHTML = App.theme === 'light' 
+                ? '<i class="fas fa-moon"></i> Dark' 
+                : '<i class="fas fa-sun"></i> Light';
+            
+            document.getElementById('langBtn').innerHTML = `<i class="fas fa-language"></i> ${App.lang}`;
+            
+            // Add color picker listeners
+            document.getElementById('fgColor').addEventListener('change', generateQR);
+            document.getElementById('bgColor').addEventListener('change', generateQR);
+            
+            // Generate initial QR
+            setTimeout(generateQR, 500);
+        }
+
+        // PWA Install
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').classList.remove('hidden');
+        });
+
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('installBtn').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
