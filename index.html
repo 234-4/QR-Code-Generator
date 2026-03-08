@@ -6,7 +6,7 @@
     <meta name="description" content="Privacy-friendly QR Code Generator with multiple formats, bulk generation, and no tracking">
     <meta name="theme-color" content="#3b82f6">
     <title>QRGen Pro - Advanced QR Code Generator</title>
-
+<link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -1307,45 +1307,7 @@
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
 
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
-                    console.log('ServiceWorker registration successful');
-                }).catch(err => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
-            });
-        }
-
-        // Create manifest.json dynamically
-        const manifest = {
-            "name": "QRGen Pro",
-            "short_name": "QRGen",
-            "description": "Privacy-friendly QR Code Generator",
-            "start_url": "/",
-            "display": "standalone",
-            "background_color": "#3b82f6",
-            "theme_color": "#3b82f6",
-            "icons": [
-                {
-                    "src": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/qrcode.svg",
-                    "sizes": "192x192",
-                    "type": "image/svg+xml"
-                },
-                {
-                    "src": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/qrcode.svg",
-                    "sizes": "512x512",
-                    "type": "image/svg+xml"
-                }
-            ]
-        };
-
-        // Add manifest link
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
-        document.head.appendChild(manifestLink);
+      
     </script>
 </body>
 </html>
